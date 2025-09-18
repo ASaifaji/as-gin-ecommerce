@@ -1,0 +1,6 @@
+APP_PORT=8080       # Default 8080
+DB_USER=root        # MySQL user
+DB_PASS=password    # MySQL user password
+DB_HOST=127.0.0.1   # Localhost / Docker
+DB_PORT=3306        # Default DB Port
+DB_NAME=mydb        # Database

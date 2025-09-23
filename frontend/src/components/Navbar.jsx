@@ -19,8 +19,8 @@ export const Navbar = () => {
     <header>
         <div className="bg-black h-[38px] flex justify-center items-center relative gap-3">
             <p className="text-white text-sm max-sm:text-xs text-center">
-            Sign up and get 20% off to your first order.{" "}
-                <Link to={"/"} className="underline underline-offset-4">
+            Daftar dan dapatkan diskon 20% untuk pesanan pertama Anda.{" "}
+                <Link to={"/login"} className="underline underline-offset-4">
                     Sign Up Now
                 </Link>
             </p>
@@ -116,7 +116,7 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">Sign up</Link>
+                    <Link to={"/login"} className="hover:underline underline-offset-2">Sign up</Link>
                 </li>
 
             </ul>

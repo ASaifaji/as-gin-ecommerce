@@ -9,6 +9,10 @@ import "slick-carousel/slick/slick-theme.css";
 import ProductList from "./pages/ProductList.jsx";
 import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
+import Login from "./pages/Login"; 
+import AuthLayout from "./layouts/AuthLayout";
+import Register from "./pages/Register"; 
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -25,6 +29,14 @@ const router = createBrowserRouter([
   {
     path: "/product/:id",
     element: <App element={<ProductDetails />} />,
+  },
+  {
+    path: "/login",
+    element: <AuthLayout element={<Login />} />, 
+  },
+  {
+  path: "/register",
+  element: <AuthLayout element={<Register />} />,
   },
 ]);
 

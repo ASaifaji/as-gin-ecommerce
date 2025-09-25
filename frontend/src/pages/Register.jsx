@@ -60,7 +60,7 @@ const Register = () => {
 
         <div className="cursor-pointer text-xs">Need any help?</div>
       </div>
-      <h1 className="text-2xl text-gray-800 font-medium text-center mt-16 p-2">
+      <h1 className="text-2xl text-gray-800 font-medium text-center mt-10 p-2">
         Registration
       </h1>
       <p className="text-gray-500 leading-5 mb-2 text-center">

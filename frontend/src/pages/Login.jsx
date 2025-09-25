@@ -62,7 +62,7 @@ const Login = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between text-purple-500 font-bold mt-5 p-1">
+      <div className="flex items-center justify-between text-purple-500 font-bold m-5 p-1">
         <Link to={"/register"}>
           <div className="cursor-pointer flex items-center text-xs">
             <MdArrowBackIos />
@@ -72,7 +72,7 @@ const Login = () => {
         <div className="cursor-pointer text-xs">Need any help?</div>
       </div>
 
-      <h1 className="text-2xl text-gray-800 text-center font-medium mt-5 p-2">
+      <h1 className="text-2xl text-gray-800 text-center font-medium mt-10 p-2">
         Login
       </h1>
       <p className="text-gray-500 leading-5 text-center mb-2">

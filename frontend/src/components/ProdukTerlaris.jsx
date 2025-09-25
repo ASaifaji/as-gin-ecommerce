@@ -15,7 +15,7 @@ const ProdukTerlaris = () => {
             <div key={item}>
               <figure className="h-[298px] rounded-[20px] overflow-hidden">
                 <img
-                  src="/product1.png"
+                  src="/jahim.jpeg"
                   alt="product image 1"
                   className="h-full w-full object-cover"
                 />

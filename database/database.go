@@ -31,6 +31,7 @@ func ConnectDB() {
 		&models.User{},
 		// &models.Category{},
 		// &models.Product{},
+		// &models.Cart{}
 		// &models.CartItem{},
 		// &models.Order{},
 		// &models.OrderItem{},

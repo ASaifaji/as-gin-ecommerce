@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Your Profile</h1>
+    <p><b>ID:</b> {{ .id }}</p>
+    <p><b>Email:</b> {{ .email }}</p>
+    <p><b>Admin:</b> {{ if .Admin }} Yes {{ else }} No {{ end }}</p>
+    <button id="logoutBtn">Logout</button>
+
+    <script>
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        const res = await fetch("/logout", {
+            method: "POST",
+            credentials: "include" // important so cookies are included
+        });
+
+        if (res.ok) {
+            // Redirect to login page after logout
+            window.location.href = "/";
+        } else {
+            alert("Logout failed");
+        }
+    });
+    </script>
+
+</body>
+</html>

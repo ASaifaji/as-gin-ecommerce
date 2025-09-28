@@ -6,7 +6,7 @@
     </head>
     <body>
 
-        <form action="/api/user" method="POST" id="registerForm">
+        <form action="/api/register" method="POST" id="registerForm">
             <div>
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
@@ -31,7 +31,7 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
 
-            const res = await fetch("/api/user", {
+            const res = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)

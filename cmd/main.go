@@ -25,6 +25,8 @@ func main () {
 	
 	server := gin.Default()
 
+	server.SetTrustedProxies([]string{"127.0.0.1", "192.168.1.15"})
+
 	server.LoadHTMLGlob("templates/**/*.html")
 
 	server.Use(

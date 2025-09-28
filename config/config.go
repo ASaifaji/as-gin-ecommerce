@@ -5,6 +5,8 @@ import (
     "os"
 
     "github.com/joho/godotenv"
+    "golang.org/x/oauth2"
+    "golang.org/x/oauth2/google"
 )
 
 type Config struct {
@@ -17,6 +19,8 @@ type Config struct {
 }
 
 var AppConfig *Config
+
+var GoogleOAuthConfig *oauth2.Config
 
 func LoadConfig() {
     // Load .env file if present
@@ -32,6 +36,14 @@ func LoadConfig() {
         DBHost:    getEnv("DB_HOST", "127.0.0.1"),
         DBPort:    getEnv("DB_PORT", "3306"),
         DBName:    getEnv("DB_NAME", "mydb"),
+    }
+
+    GoogleOAuthConfig = &oauth2.Config{
+        RedirectURL:    "http://localhost:8080/api/auth/google/callback",
+        ClientID:       getEnv("GoogleOAuthClientID", ""),
+        ClientSecret:   getEnv("GoogleOAuthClientSecret", ""),
+        Scopes:         []string{"https://www.googleapis.com/auth/userinfo.email"},
+        Endpoint:       google.Endpoint,
     }
 }
 

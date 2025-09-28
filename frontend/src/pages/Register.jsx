@@ -8,12 +8,12 @@ import api from "../lib/api"; // axios instance
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [username, setusername] = useState("");
   const navigate = useNavigate();
 
   const handlesubmit = async (e) => {
     e.preventDefault();
-    if (fullName === "") {
+    if (username === "") {
       toast.error("Full Name is required!");
     } else if (password === "") {
       toast.error("Password is required!");
@@ -23,16 +23,18 @@ const Register = () => {
       toast.error("Email is required!");
     } else {
       try {
-        const res = await api.post("register.php", { fullName, email, password });
+        const res = await api.post("user", { username, email, password });
 
-        if (res.data.status === "success") {
+        console.log("Response dari backend:", res.data);
+
+        if (res.status === 200) {
           toast.success(res.data.message);
           setTimeout(() => navigate("/login"), 1500);
         } else {
-          toast.error(res.data.message);
+          toast.error(res.data.error || "Registrasi gagal!");
         }
       } catch (err) {
-        toast.error(err.response?.data?.message || "Registrasi gagal!");
+        toast.error(err.response?.data?.error || "Registrasi gagal!");
       }
     }
   };
@@ -63,12 +65,12 @@ const Register = () => {
         <label className="relative">
           <input
             type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            value={username}
+            onChange={(e) => setusername(e.target.value)}
             className="my-2 mx-1 w-[270px] xs:w-[360px] md:w-[450px] px-6 py-3 rounded-full border border-gray-400 focus:border-purple-500 transition"
           />
           <span className="absolute top-5 left-6 text-gray-500">
-            {fullName ? "" : "Full Name"}
+            {username ? "" : "Full Name"}
           </span>
         </label>
         <label className="relative">

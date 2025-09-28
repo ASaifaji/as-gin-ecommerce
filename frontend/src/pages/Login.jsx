@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MdArrowBackIos } from "react-icons/md";
-import { auth, signInWithGithub, signInWithGoogle } from "../firebase.js";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import githubLogo from "../assets/Github.png";
+import api from "../lib/api.js";
 
 const initialState = {
   email: "",
@@ -16,45 +13,36 @@ const initialState = {
 const Login = () => {
   const [Data, setData] = useState(initialState);
   const { password, email } = Data;
-  const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
 
-  const handlesubmit = (e) => {
+  const handlesubmit = async (e) => {
     e.preventDefault();
     if (email === "") {
       toast.error("Email-id is required!");
     } else if (password === "") {
       toast.error("Password is required!");
     } else {
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredentials) => {
-          console.log(userCredentials);
-        })
-        .catch((err) => {
-          if (err.code === "auth/invalid-email") {
-            toast.error("Invalid email id!");
-          }
-          if (err.code === "auth/user-not-found") {
-            toast.error("User not registered!");
-          }
-          if (err.code === "auth/wrong-password") {
-            toast.error("You entered wrong password!");
-          }
-          if (err.code === "auth/too-many-requests") {
-            toast.error("Too many attempts, Please try after sometime!");
-          }
-        });
+      try {
+        const res = await api.post("login.php", { email, password });
+        if (res.data.status === "success") {
+        toast.success(res.data.message);
+        localStorage.setItem("token", res.data.token);
+        navigate("/");
+        } else {
+          toast.error(res.data.message || "Login gagal!");
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Login gagal!");
+      }
     }
   };
 
   useEffect(() => {
-    if (loading) {
-      return;
-    }
-    if (user) {
+    const token = localStorage.getItem("token");
+    if (token) {
       navigate("/");
     }
-  }, [user, loading, navigate]);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setData({ ...Data, [e.target.name]: e.target.value });
@@ -78,7 +66,7 @@ const Login = () => {
       <p className="text-gray-500 leading-5 text-center mb-2">
         Sign-in to continue
       </p>
-      {error && <div className="my-4 text-center"> {error.message} </div>}
+
       <form
         onSubmit={handlesubmit}
         className="flex flex-col justify-center items-center"
@@ -117,42 +105,12 @@ const Login = () => {
         </button>
       </form>
       <ToastContainer />
-      <div className="flex items-center justify-center mt-5 text-gray-500">
-        <div className="border-[1px] w-[200px] border-gray-300 mr-1" />
-        OR
-        <div className="border-[1px] w-[200px] border-gray-300 ml-1"></div>
-      </div>
-      <div className="flex flex-col items-center">
-        <button
-          type="submit"
-          className="w-[270px] h-[30] sm:w-[360px] sm:h-[40px] md:w-[450px] md:h-[50px] p-2 md:p-0 bg-gray-100 text-black text-base font-medium rounded-full mt-5 md:mt-4 flex items-center justify-center"
-          onClick={() => signInWithGoogle()}
-        >
-          <img
-            src="https://cdn-icons-png.flaticon.com/128/2991/2991148.png"
-            alt="google"
-            className="h-[25px] md:h-[28px] mr-[6px]"
-          />
-          Login with Google
-        </button>
-        <button
-          type="submit"
-          className="w-[270px] h-[30] xs:w-[360px] xs:h-[40px] md:w-[450px] md:h-[50px] p-2 md:p-0 bg-white border-gray-200 border-[2px] text-base font-medium rounded-full my-5 md:mt-4 flex items-center justify-center"
-          onClick={() => signInWithGithub()}
-        >
-          <img
-            src={githubLogo}
-            alt="github"
-            className="h-[30px] sm:h-[36px] mr-[2px]"
-            />
-          Login with Github
-        </button>
-        <div className="text-gray-600 mt-2 mb-5">
-          Don't have an account?{" "}
-          <Link to={"/register"}>
-            <span className="text-purple-500 font-medium">Register here</span>
-          </Link>
-        </div>
+
+      <div className="text-gray-600 mt-5 mb-5 text-center">
+        Don't have an account?{" "}
+        <Link to={"/register"}>
+          <span className="text-purple-500 font-medium">Register here</span>
+        </Link>
       </div>
     </div>
   );

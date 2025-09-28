@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			ctx.Abort()
 		}
 
-		// Put claims into Gin context
+		// Put claims into Gin
 		ctx.Set("id", claims.UserID)
 		ctx.Set("email", claims.Email)
 		ctx.Set("admin", claims.Admin)

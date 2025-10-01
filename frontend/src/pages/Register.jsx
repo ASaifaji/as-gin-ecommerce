@@ -23,7 +23,7 @@ const Register = () => {
       toast.error("Email is required!");
     } else {
       try {
-        const res = await api.post("user", { username, email, password });
+        const res = await api.post("/register", { username, email, password });
 
         console.log("Response dari backend:", res.data);
 

@@ -4,16 +4,10 @@ import "time"
 
 // category model
 type Category struct {
-	ID        uint      `gorm:"primaryKey"`
-	Name      string    `json:"name" gorm:"uniqueIndex;size:100;not null"` 
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	// relasi
-	Products  []Product
-}
-
-// untuk input category
-type CategoryInput struct {
-	Name string `json:"name" binding:"required,min=3,max=100"`
+    ID        uint      `gorm:"primaryKey" json:"id"`
+    Name      string    `gorm:"uniqueIndex;size:100;not null" json:"name"`
+    Slug      string    `gorm:"uniqueIndex;size:100;not null" json:"slug"`
+    Products  []Product `gorm:"constraint:OnDelete:SET NULL;" json:"products"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
 }

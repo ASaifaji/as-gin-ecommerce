@@ -11,73 +11,50 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
-		api.GET("/user/id/:id",middlewares.AuthMiddleware() , controllers.GetUserByID)
-		api.GET("/user/username/:username",middlewares.AuthMiddleware() , controllers.GetUserByUsername)
-		api.GET("/user/profile", middlewares.AuthMiddleware(), controllers.Profile)
-		
-		//	Register
-		api.POST("/register", func(ctx *gin.Context) {
-			controllers.Register(ctx)
-		})
+		// Users
+		api.POST("/register", func(ctx *gin.Context) {controllers.Register(ctx)})
+		api.POST("/login", func(ctx *gin.Context) {controllers.Login(ctx)})
+		api.GET("/profile", middlewares.AuthMiddleware(), controllers.GetProfile)
+		// api.PUT("/profile", middlewares.AuthMiddleware(), controllers.UpdateProfile)
+		api.POST("/profile/password", middlewares.AuthMiddleware(), controllers.SetPassword)
+		api.PUT("/profile/password", middlewares.AuthMiddleware(), controllers.UpdatePassword)
+		api.GET("/users", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllUsers)
+		api.GET("/users/:id", middlewares.AuthMiddleware() , controllers.GetUserDetail)
+		// api.PUT("/users/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateUser)
+		api.DELETE("/users/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteUser)
 
-		// Login
-		api.POST("/login", func(ctx *gin.Context) {
-			controllers.Login(ctx)
-		})
+		// Product
+		api.GET("/products", controllers.GetAllProducts)
+		api.GET("/products/:id", controllers.GetProductDetail)
+		api.POST("/products", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateProduct)
+		// api.PUT("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateProduct)
+		api.DELETE("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProduct)
 
-		api.POST("/set-password", controllers.SetPassword)
+		// Order
+		// api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
+		// api.GET("/orders", middlewares.AuthMiddleware(), controllers.GetAllOwnOrders)
+		// api.GET("/orders/:id", middlewares.AuthMiddleware(), controllers.GetOrderDetail)
+		// api.GET("/admin/orders", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
+		// api.PUT("/orders/:id/status", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateOrderStatus)
 
-		apiAuth := api.Group("/")
-		apiAuth.Use(middlewares.AuthMiddleware())
-		{
-			apiAuth.GET("/profile", controllers.Profile)
-		}
+		// Category
+		api.GET("/categories", controllers.GetAllCategories)
+		api.POST("/categories", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateCategory)
+		// api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
+		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
+
+		// Cart
+		// api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
+		api.POST("/cart", middlewares.AuthMiddleware(), controllers.AddProductToCart)
+		api.PUT("/cart/:itemId", middlewares.AuthMiddleware(), controllers.UpdateCartItem)
+		// api.DELETE("/cart/:itemId", middlewares.AuthMiddleware(), controllers.RemoveCartItem)
+		// api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
 
 		// google OAuth2
 		api.GET("auth/google/login", controllers.GoogleLogin)
 		api.GET("auth/google/callback", controllers.GoogleCallback)
 
-		// apiProduct := api.Group("/Product")
-		// {
-		// 	apiProduct.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
-
-		// apiCategory := api.Group("/Category")
-		// {
-		// 	apiCategory.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
-
-		// apiCart := api.Group("/Cart")
-		// {
-		// 	apiCart.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
-
-		// apiOrder := api.Group("/Order")
-		// {
-		// 	apiOrder.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
-
-		// apiOrderItem := api.Group("/OrderItem")
-		// {
-		// 	apiOrderItem.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
-
-		// apiPayment := api.Group("/Payment")
-		// {
-		// 	apiPayment.GET("/", func(ctx *gin.Context) {
-		// 		ctx.JSON(200, nil)
-		// 	})
-		// }
+		
 	}
 
 	view := r.Group("")

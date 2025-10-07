@@ -40,3 +40,26 @@ func AuthMiddleware() gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func AuthAdmin() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Make sure user is authenticated first (AuthMiddleware())
+		adminVal, exists := ctx.Get("admin")
+		if !exists {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+
+		isAdmin, ok := adminVal.(bool)
+		if !ok || !isAdmin {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "Forbidden: admin access required",
+			})
+			return
+		}
+		
+		ctx.Next()
+	}
+}

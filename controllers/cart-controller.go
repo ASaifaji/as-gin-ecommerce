@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/ASaifaji/as-gin-ecommerce/database"
 	"github.com/ASaifaji/as-gin-ecommerce/models"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func AddProductToCart(ctx *gin.Context) {
@@ -125,4 +127,98 @@ func UpdateCartItem(ctx *gin.Context) {
 		"message": "Cart item updated successfully",
 		"item":    item,
 	})
+}
+
+// GET /api/cart
+func GetOwnCart(ctx *gin.Context) {
+	uid, ok := ctx.Get("id")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := uid.(uint)
+
+	var cart models.Cart
+	if err := database.DB.
+		Preload("Items.Product").
+		Where("user_id = ?", userID).
+		First(&cart).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// User belum punya cart -> balikan cart kosong
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "cart is empty",
+				"cart": gin.H{
+					"id":    0,
+					"items": []models.CartItem{},
+				},
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load cart"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+		"cart":    cart,
+	})
+}
+
+// DELETE /api/cart/:itemId
+func RemoveCartItem(ctx *gin.Context) {
+	itemIDStr := ctx.Param("itemId")
+	itemID, err := strconv.ParseUint(itemIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid item id"})
+		return
+	}
+
+	uid, ok := ctx.Get("id")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := uid.(uint)
+
+	var cart models.Cart
+	if err := database.DB.Where("user_id = ?", userID).First(&cart).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "cart not found"})
+		return
+	}
+
+	res := database.DB.Where("id = ? AND cart_id = ?", itemID, cart.ID).Delete(&models.CartItem{})
+	if res.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove cart item"})
+		return
+	}
+	if res.RowsAffected == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "cart item not found"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "cart item removed"})
+}
+
+// DELETE /api/cart/clear
+func ClearCart(ctx *gin.Context) {
+	uid, ok := ctx.Get("id")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := uid.(uint)
+
+	var cart models.Cart
+	if err := database.DB.Where("user_id = ?", userID).First(&cart).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "cart not found"})
+		return
+	}
+
+	if err := database.DB.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to clear cart"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "cart cleared"})
 }

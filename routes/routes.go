@@ -12,49 +12,47 @@ func SetupRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
 		// Users
-		api.POST("/register", func(ctx *gin.Context) {controllers.Register(ctx)})
-		api.POST("/login", func(ctx *gin.Context) {controllers.Login(ctx)})
+		api.POST("/register", func(ctx *gin.Context) { controllers.Register(ctx) })
+		api.POST("/login", func(ctx *gin.Context) { controllers.Login(ctx) })
 		api.GET("/profile", middlewares.AuthMiddleware(), controllers.GetProfile)
-		// api.PUT("/profile", middlewares.AuthMiddleware(), controllers.UpdateProfile)
-		api.POST("/profile/password", middlewares.AuthMiddleware(), controllers.SetPassword)
+		api.PUT("/profile", middlewares.AuthMiddleware(), controllers.UpdateProfile)
 		api.PUT("/profile/password", middlewares.AuthMiddleware(), controllers.UpdatePassword)
 		api.GET("/users", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllUsers)
-		api.GET("/users/:id", middlewares.AuthMiddleware() , controllers.GetUserDetail)
-		// api.PUT("/users/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateUser)
+		api.GET("/users/:id", middlewares.AuthMiddleware(), controllers.GetUserDetail)
+		api.PUT("/users/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateUser)
 		api.DELETE("/users/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteUser)
 
 		// Product
 		api.GET("/products", controllers.GetAllProducts)
 		api.GET("/products/:id", controllers.GetProductDetail)
 		api.POST("/products", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateProduct)
-		// api.PUT("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateProduct)
+		api.PUT("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateProduct)
 		api.DELETE("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProduct)
 
 		// Order
-		// api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
-		// api.GET("/orders", middlewares.AuthMiddleware(), controllers.GetAllOwnOrders)
-		// api.GET("/orders/:id", middlewares.AuthMiddleware(), controllers.GetOrderDetail)
-		// api.GET("/admin/orders", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
-		// api.PUT("/orders/:id/status", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateOrderStatus)
+		api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
+		api.GET("/orders", middlewares.AuthMiddleware(), controllers.GetAllOwnOrders)
+		api.GET("/orders/:id", middlewares.AuthMiddleware(), controllers.GetOrderDetail)
+		api.GET("/admin/orders", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
+		api.PUT("/orders/:id/status", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateOrderStatus)
 
 		// Category
 		api.GET("/categories", controllers.GetAllCategories)
 		api.POST("/categories", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateCategory)
-		// api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
+		api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
 
 		// Cart
-		// api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
+		api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
 		api.POST("/cart", middlewares.AuthMiddleware(), controllers.AddProductToCart)
 		api.PUT("/cart/:itemId", middlewares.AuthMiddleware(), controllers.UpdateCartItem)
-		// api.DELETE("/cart/:itemId", middlewares.AuthMiddleware(), controllers.RemoveCartItem)
-		// api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
+		api.DELETE("/cart/:itemId", middlewares.AuthMiddleware(), controllers.RemoveCartItem)
+		api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
 
 		// google OAuth2
 		api.GET("auth/google/login", controllers.GoogleLogin)
 		api.GET("auth/google/callback", controllers.GoogleCallback)
 
-		
 	}
 
 	view := r.Group("")
@@ -65,7 +63,7 @@ func SetupRoutes(r *gin.Engine) {
 				controllers.ViewHome(ctx)
 			})
 
-			vHome.GET("/loggedin", middlewares.AuthMiddleware(), func (ctx *gin.Context)  {
+			vHome.GET("/loggedin", middlewares.AuthMiddleware(), func(ctx *gin.Context) {
 				controllers.ViewLoggedin(ctx)
 			})
 		}

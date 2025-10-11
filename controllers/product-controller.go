@@ -34,7 +34,6 @@ func CreateProduct(ctx *gin.Context) {
 		return
 	}
 
-
 	product := models.Product{
 		Name:          input.Name,
 		Description:   input.Description,
@@ -124,5 +123,50 @@ func DeleteProduct(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product deleted successfully",
+	})
+}
+
+func UpdateProduct(ctx *gin.Context) {
+	id := ctx.Param("id")
+	productID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID format"})
+		return
+	}
+
+	var input models.UpdateProductInput // Asumsi struct ini sudah kamu buat di models
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var product models.Product
+	if err := database.DB.First(&product, productID).Error; err != nil{
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	updateMap := make(map[string]interface{})
+    if input.Name != "" {
+        updateMap["name"] = input.Name
+    }
+    if input.Description != "" {
+        updateMap["description"] = input.Description
+    }
+    if input.Price > 0 { 
+        updateMap["price"] = input.Price
+    }
+    if input.StockQuantity >= 0 {
+        updateMap["stock"] = input.StockQuantity
+    }
+    if input.CategoryID > 0 {
+        updateMap["category_id"] = input.CategoryID
+    }
+
+	database.DB.First(&product, productID)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Product updated successfully",
+		"product": product,
 	})
 }

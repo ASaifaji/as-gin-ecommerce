@@ -44,12 +44,12 @@ func SetupRoutes(r *gin.Engine) {
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
 
 		// Cart
-		// api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
+		api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
 		api.POST("/cart", middlewares.AuthMiddleware(), controllers.AddProductToCart)
 		api.PUT("/cart/:itemId", middlewares.AuthMiddleware(), controllers.UpdateCartItem)
-		// api.DELETE("/cart/:itemId", middlewares.AuthMiddleware(), controllers.RemoveCartItem)
-		// api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
-
+		api.DELETE("/cart/:itemId", middlewares.AuthMiddleware(), controllers.RemoveCartItem)
+		api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
+		
 		// google OAuth2
 		api.GET("auth/google/login", controllers.GoogleLogin)
 		api.GET("auth/google/callback", controllers.GoogleCallback)

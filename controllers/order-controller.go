@@ -133,6 +133,6 @@ func UpdateOrderStatus(ctx *gin.Context) {
 	})
 }
 
-func userIDIsAdmin(userID uint) bool {
+func userIDIsAdmin(id uint) bool {
 	return false 
 }

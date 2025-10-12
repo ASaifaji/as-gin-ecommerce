@@ -41,8 +41,11 @@ const Produk = () => {
             </div>
           ))}
         </div>
+        
         <button className="py-4 px-[54px] w-[218px] hover:bg-zinc-50 rounded-full border font-medium border-[#0000001A] self-center mt-9">
+          <Link to={`/products`}>
           View All
+          </Link>
         </button>
       </div>
     </section>

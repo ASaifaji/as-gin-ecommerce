@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { MdArrowBackIos } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../lib/api.js";
+import api from "../../lib/api.js";
 
 const initialState = {
   email: "",
@@ -23,11 +23,16 @@ const Login = () => {
       toast.error("Password is required!");
     } else {
       try {
-        const res = await api.post("login.php", { email, password });
+        const res = await api.post("login", { email, password });
         if (res.data.status === "success") {
-        toast.success(res.data.message);
-        localStorage.setItem("token", res.data.token);
-        navigate("/");
+          toast.success(res.data.message);
+          localStorage.setItem("token", res.data.token);
+          // Cek role admin
+          if (res.data.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/home");
+          }
         } else {
           toast.error(res.data.message || "Login gagal!");
         }

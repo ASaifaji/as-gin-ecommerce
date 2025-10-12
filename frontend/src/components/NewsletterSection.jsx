@@ -17,12 +17,12 @@ const NewsletterSection = () => {
               type="email"
               name="email"
               id="email"
-              placeholder="Enter your email address"
+              placeholder="Masukkan email anda"
               className="text-base outline-none w-full"
             />
           </div>
           <button className="py-[12px] px-[16px] rounded-full text-center text-base font-medium bg-white w-full">
-            Subscribe to Newsletter
+            Daftar Newsletter
           </button>
         </div>
       </div>

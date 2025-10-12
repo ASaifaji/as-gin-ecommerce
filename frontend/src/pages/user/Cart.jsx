@@ -11,27 +11,24 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
-      name: "Gradient Graphic T-shirt",
-      price: 145,
-      size: "Large",
-      color: "White",
+      name: "Barang yang dipilih",
+      price: 145000,
       quantity: 1,
+      desc: "Color: Merah",
     },
     {
       id: 2,
-      name: "Gradient Graphic T-shirt",
-      price: 145,
-      size: "Large",
-      color: "White",
+      name: "Barang yang dipilih",
+      price: 20000,
       quantity: 1,
+      desc: "Color: Merah",
     },
     {
       id: 3,
-      name: "Gradient Graphic T-shirt",
-      price: 145,
-      size: "Large",
-      color: "White",
+      name: "Barang yang dipilih",
+      price: 30000,
       quantity: 1,
+      desc: "Color: Merah",
     },
   ]);
 
@@ -59,13 +56,13 @@ const Cart = () => {
           <Link to={`/`}>Home</Link>
           <span>/</span>
           <Link to={`#`} className="text-[#000000]">
-            Cart
+            Keranjang
           </Link>
         </div>
 
         <div>
           <h4 className="uppercase text-[40px] max-sm:text-[32px] font-bold">
-            Your cart
+            KERANJANG SAYA
           </h4>
           <div className="flex justify-between gap-5 mt-5 max-lg:flex-col">
             <div className="border border-[#0000001A] rounded-[20px] py-[20px] px-[24px] w-[60%] max-lg:w-full">
@@ -90,13 +87,12 @@ const Cart = () => {
                               <Trash2 size={18} />
                             </button>
                           </div>
-                          <div className="text-sm text-[#00000099] flex flex-col gap-1 max-sm:text-xs">
-                            <span>Size: {item.size}</span>
-                            <span>Color: {item.color}</span>
+                          <div className="text-sm text-[#00000099] flex flex-col gap-1 max-sm:text-xs"> 
+                          <span>Desc: {item.desc}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-2xl max-sm:text-xl font-bold">
-                              ${item.price}
+                              Rp.{item.price}
                             </span>
                             <div className="flex items-center gap-4 rounded-full py-[12px] px-[20px] w-fit bg-[#F0F0F0]">
                               <button onClick={() => handleDecrement(item.id)}>
@@ -120,26 +116,22 @@ const Cart = () => {
             </div>
             <div className="border border-[#0000001A] rounded-[20px] py-[20px] px-[24px] w-[40%] flex flex-col gap-[24px] max-lg:w-full">
               <h4 className="text-2xl max-sm:text-xl font-bold">
-                Order Summary
+                Total Pesanan
               </h4>
               <ul className="flex flex-col gap-5 text-xl max-sm:text-base">
                 <li className="flex items-center justify-between">
                   <span className="text-[#00000099]">Subtotal</span>
-                  <span className="font-bold">$565</span>
+                  <span className="font-bold">Rp.000</span>
                 </li>
                 <li className="flex items-center justify-between">
-                  <span className="text-[#00000099]">Discount (-20%)</span>
-                  <span className="text-[#FF3333] font-bold">-$113</span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span className="text-[#00000099]">Delivery Fee</span>
-                  <span className="font-bold">$15</span>
+                  <span className="text-[#00000099]">Biaya Ongkir</span>
+                  <span className="font-bold">Rp.000</span>
                 </li>
                 <hr />
                 <li className="flex items-center justify-between">
                   <span>Total</span>
                   <span className="text-2xl max-sm:text-xl font-bold">
-                    $467
+                    Rp.000
                   </span>
                 </li>
               </ul>
@@ -152,7 +144,7 @@ const Cart = () => {
                     name="promocode"
                     id="promocode"
                     className="bg-transparent w-full outline-none max-sm:text-sm"
-                    placeholder="Add a Promocode"
+                    placeholder="Tambahkan kode promo"
                   />
                 </div>
                 <button className="bg-black py-[12px] px-[16px] text-white font-medium text-base rounded-full hover:bg-neutral-700 transition-all max-sm:text-sm ease-in-out duration-200">
@@ -160,7 +152,7 @@ const Cart = () => {
                 </button>
               </div>
               <button className="flex items-center gap-2 py-[16px] px-[54px] rounded-full bg-black text-white max-sm:text-sm justify-center hover:bg-neutral-700 transition-all ease-in-out duration-200">
-                Go to Checkout <ArrowRight />
+                Pergi ke Checkout <ArrowRight />
               </button>
             </div>
           </div>

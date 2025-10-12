@@ -3,27 +3,15 @@ package models
 import "time"
 
 //  product model 
-type Product struct{
-	ID             uint      `gorm:"primaryKey"`
-	Name           string    `json:"name" gorm:"size:255;not null"`
-	Description    string    `json:"description" gorm:"type:text"`
-	Price          float64   `json:"price" gorm:"type:decimal(10,2);not null"`
-	StockQuantity  int       `json:"stock_quantity" gorm:"not null"`
-	CategoryID     uint      `json:"category_id" gorm:"not null"` // foreign Key
-	IsActive       bool      `json:"is_active" gorm:"default:true"`
-	CreatedAt      time.Time
-	UpdatedAt	   time.Time
-
-	// relasi
-	Category	   Category
-}
-
-// input product 
-type ProductInput struct{
-	Name          string  `json:"name" binding:"required,min=5,max=255"`
-	Description   string  `json:"description" binding:"required,min=10"`
-	Price         float64 `json:"price" binding:"required,gt=0"`
-	StockQuantity int     `json:"stock_quantity" binding:"required,gte=0"`
-	CategoryID    uint    `json:"category_id" binding:"required,gt=0"`
-	IsActive 	  bool    `json:"is_active" binding:"required"`
+type Product struct {
+    ID            uint      `gorm:"primaryKey" json:"id"`
+    Name          string    `gorm:"size:200;not null" json:"name"`
+    Description   string    `gorm:"type:text" json:"description"`
+    Price         int64     `gorm:"not null" json:"price"` // store in cents (129900 = Rp1299.00)
+    StockQuantity int       `gorm:"not null;default:0" json:"stock_quantity"`
+    CategoryID    uint      `json:"category_id"`
+    IsActive      bool      `gorm:"default:true" json:"is_active"`
+    Category      Category  `json:"category"`
+    CreatedAt     time.Time `json:"created_at"`
+    UpdatedAt     time.Time `json:"updated_at"`
 }

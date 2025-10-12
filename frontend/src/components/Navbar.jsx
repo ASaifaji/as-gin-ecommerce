@@ -106,17 +106,17 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">About</Link>
+                    <Link to={"/"} className="hover:underline underline-offset-2">About</Link>
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">
+                    <Link to={"/products"} className="hover:underline underline-offset-2">
                     Produk
                     </Link>
                 </li>
 
                 <li>
-                    <Link to={"/login"} className="hover:underline underline-offset-2">Sign up</Link>
+                    <Link to={"/register"} className="hover:underline underline-offset-2">Sign up</Link>
                 </li>
 
             </ul>
@@ -150,7 +150,7 @@ export const Navbar = () => {
                     <Search size={24} />
                 </button>
 
-                <Link to={"/cart"}>
+                <Link to={"/login"}>
                     <button>
                         <ShoppingCart size={24} />
                     </button>
@@ -208,7 +208,7 @@ export const Navbar = () => {
           </li>
 
           <li>
-            <Link to={"/"} className="block py-2">
+            <Link to={"/products"} className="block py-2">
               Produk
             </Link>
           </li>

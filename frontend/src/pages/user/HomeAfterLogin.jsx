@@ -7,6 +7,7 @@ import Kategori from "../../components/Kategori";
 import TestimonialSection from "../../components/TestimonialSection";
 import NewsletterSection from "../../components/NewsletterSection";
 import NavbarAfterJoin from "../../components/NavbarAfterJoin";
+import Footer from "../../components/Footer";
 
 const HomeAfterLogin = () => {
   return (
@@ -19,6 +20,7 @@ const HomeAfterLogin = () => {
       <Kategori />
       <TestimonialSection />
       <NewsletterSection />
+      <Footer />
     </>
   );
 };

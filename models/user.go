@@ -4,34 +4,33 @@ import "time"
 
 // User model
 type User struct {
-    ID        uint      `gorm:"primaryKey"`
-    Username  string    `gorm:"uniqueIndex;size:100;not null"`
-    Email     string    `gorm:"uniqueIndex;size:100;not null"`
-    Password  string    `gorm:""` // stored hashed password empty if google oauth
-    Admin     bool      `gorm:"default:false"`
-    Provider  string    `gorm:"size:50;default:local"` // local or google
-    CreatedAt time.Time
-    UpdatedAt time.Time
+	ID       uint   `gorm:"primaryKey" json:"id"`
+	Username string `gorm:"uniqueIndex;size:100;not null" json:"username"`
+	Email    string `gorm:"uniqueIndex;size:100;not null" json:"email"`
+	Password string `json:"-"`
+	Admin    bool   `gorm:"default:false" json:"admin"`
+	Provider string `gorm:"size:50;default:local" json:"provider"`
+
+	Addresses []Address `gorm:"constraint:OnDelete:CASCADE;" json:"addresses"`
+
+	Orders []Order `json:"orders"`
+	Cart   Cart    `json:"cart"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type RegisInput struct {
-    Username string `form:"username" json:"username" binding:"required,min=3,max=32"`
-    Email    string `form:"email"    json:"email"    binding:"required,email"`
-    Password string `form:"password" json:"password" binding:"required,min=6"`
+//struct input untuk controller
+// UpdateProfileInput digunakan untuk menerima data saat user mengupdate profilnya sendiri
+type UpdateProfileInput struct {
+	// fields yang user boleh ubah
+	Username string `json:"username,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
-type LoginInput struct {
-    Login string `form:"login" json:"login" binding:"required,min=3,max=32"`
-    Password string `form:"password" json:"password" binding:"required,min=6"`
-}
-
-type LoginInputEmail struct {
-    Email    string `form:"email"    json:"email"    binding:"required,email"`
-    Password string `form:"password" json:"password" binding:"required,min=6"`
-}
-
-type SetPasswordInput struct {
-    Email           string `json:"email" binding:"required,email"`
-    OldPassword     string `json:"old_password" binding:"required,min=6"`
-    NewPassword     string `json:"new_password" binding:"required,min=6"`
+// UpdateUserAdminInput digunakan untuk menerima data saat Admin mengupdate user lain
+type UpdateUserAdminInput struct {
+	Username string `json:"username,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Admin    *bool  `json:"admin,omitempty"`
 }

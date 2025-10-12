@@ -9,50 +9,35 @@ import "slick-carousel/slick/slick-theme.css";
 import ProductList from "./pages/user/ProductList.jsx";
 import Cart from "./pages/user/Cart";
 import ProductDetails from "./pages/user/ProductDetails";
-import Login from "./pages/auth/Login"; 
+import Login from "./pages/auth/Login";
 import AuthLayout from "./layouts/AuthLayout";
-import Register from "./pages/auth/Register"; 
+import Register from "./pages/auth/Register";
 import HomeAfterLogin from "./pages/user/HomeAfterLogin";
 import Profile from "./pages/user/Profile";
 import AdminPanel from "./pages/admin/AdminPanel";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import the component
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App element={<Home />} />,
+    element: <App />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: "products", element: <ProductList /> },
+      { path: "cart", element: <Cart /> },
+      { path: "product/:id", element: <ProductDetails /> },
+    ],
   },
   {
-    path: "/home",
-    element: <App element={<HomeAfterLogin />} />,
+    element: <AuthLayout />,
+    children: [
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      { path: "/admin", element: <AdminPanel /> },
+      { path: "/home", element: <ProtectedRoute><HomeAfterLogin /></ProtectedRoute> },
+      { path: "/profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+    ],
   },
-  {
-    path: "/profile",
-    element: <AuthLayout element={<Profile />} />,
-  },
-  {
-    path: "/products",
-    element: <App element={<ProductList />} />,
-  },
-  {
-    path: "/cart",
-    element: <App element={<Cart />} />,
-  },
-  {
-    path: "/product/:id",
-    element: <App element={<ProductDetails />} />,
-  },
-  {
-    path: "/login",
-    element: <AuthLayout element={<Login />} />, 
-  },
-  {
-  path: "/register",
-  element: <AuthLayout element={<Register />} />,
-  },
-  {
-  path: "/admin",
-  element: <App element ={<AdminPanel />} />,
-  }
 ]);
 
 createRoot(document.getElementById("root")).render(

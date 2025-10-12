@@ -4,50 +4,55 @@ import { MdArrowBackIos } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../lib/api.js";
+import { jwtDecode } from "jwt-decode";
 
 const initialState = {
-  email: "",
+  login: "",
   password: "",
 };
 
-const Login = () => {
+const login = () => {
   const [Data, setData] = useState(initialState);
-  const { password, email } = Data;
+  const { password, login } = Data;
   const navigate = useNavigate();
 
   const handlesubmit = async (e) => {
     e.preventDefault();
-    if (email === "") {
+    if (login === "") {
       toast.error("Email-id is required!");
     } else if (password === "") {
-      toast.error("Password is required!");
+      toast.error("password is required!");
     } else {
       try {
-        const res = await api.post("login", { email, password });
-        if (res.data.status === "success") {
+        const res = await api.post("login", { login, password });
+        if (res.data.token) {
           toast.success(res.data.message);
-          localStorage.setItem("token", res.data.token);
+          const token = res.data.token;
+          localStorage.setItem("token", token);
+
+          const decoded = jwtDecode(token);
+          console.log(decoded);
           // Cek role admin
-          if (res.data.role === "admin") {
-            navigate("/admin");
+          if (decoded.admin === true) {
+            document.location.href = "/admin";
           } else {
-            navigate("/home");
+            document.location.href = "/home";
           }
         } else {
-          toast.error(res.data.message || "Login gagal!");
+          toast.error(res.data.message || "login gagal!");
         }
       } catch (err) {
-        toast.error(err.response?.data?.message || "Login gagal!");
+        toast.error(err.response?.data?.message || "login gagal!");
       }
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/");
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   if (token) {
+  //     navigate("/");
+  //   }
+  // }, [navigate]);
 
   const handleChange = (e) => {
     setData({ ...Data, [e.target.name]: e.target.value });
@@ -66,7 +71,7 @@ const Login = () => {
       </div>
 
       <h1 className="text-2xl text-gray-800 text-center font-medium mt-10 p-2">
-        Login
+        login
       </h1>
       <p className="text-gray-500 leading-5 text-center mb-2">
         Sign-in to continue
@@ -79,14 +84,14 @@ const Login = () => {
         <label className="relative">
           <input
             type="text"
-            name="email"
-            value={email}
-            id="email"
+            name="login"
+            value={login}
+            id="login"
             onChange={handleChange}
             className="my-2 mx-1 w-[270px] h-[30] xs:w-[360px] xs:h-[40px] md:w-[450px] md:h-[50px] px-6 py-3 rounded-full outline-none border-[1px] border-gray-400 focus:border-purple-500 transition duration-200"
           />
           <span className="absolute top-5 text-gray-500 left-0 mx-6 px-2 transition duration-300 input-text">
-            {email ? "" : "Email"}
+            {login ? "" : "Email"}
           </span>
         </label>
         <label className="relative">
@@ -99,7 +104,7 @@ const Login = () => {
             className="my-2 mx-1 w-[270px] h-[30] xs:w-[360px] xs:h-[40px] md:w-[450px] md:h-[50px] px-6 py-3 rounded-full outline-none border-[1px] border-gray-400 focus:border-purple-500 transition duration-200"
           />
           <span className="absolute w-[80px] top-5 text-gray-500 left-0 mx-6 px-2 transition duration-300 input-text">
-            {password ? "" : "Password"}
+            {password ? "" : "password"}
           </span>
         </label>
         <button
@@ -121,4 +126,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default login;

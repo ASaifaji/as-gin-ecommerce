@@ -95,11 +95,16 @@ func SetPassword(ctx *gin.Context) {
     }
 
     var user models.User
-    if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-        ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	UserId, _ := ctx.Get("id")
+    if err := database.DB.Where("email = ?", UserId).First(&user).Error; err != nil {
+        ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found, try to re-login"})
         return
     }
 
+	if user.Password != "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Password already Exists"})
+	}
+	
     // Hash new password
     hashed, err := utils.HashPassword(input.NewPassword)
     if err != nil {
@@ -111,5 +116,38 @@ func SetPassword(ctx *gin.Context) {
     user.Password = hashed
     database.DB.Save(&user)
 
-    ctx.JSON(http.StatusOK, gin.H{"message": "Password set successfully, you can now log in locally"})
+    ctx.JSON(http.StatusOK, gin.H{"message": "Password set successfully, you can now log in locally with password"})
+}
+
+func UpdatePassword(ctx *gin.Context) {
+	var input models.UpdatePasswordInput
+    if err := ctx.ShouldBindJSON(&input); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    var user models.User
+	UserId, _ := ctx.Get("id")
+    if err := database.DB.Where("email = ?", UserId).First(&user).Error; err != nil {
+        ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found, try to re-login"})
+        return
+    }
+
+	if !utils.CheckPassword(user.Password, input.OldPassword) {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong Old Password"})
+        return
+    }
+
+	// Hash new password
+    hashed, err := utils.HashPassword(input.NewPassword)
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+        return
+    }
+
+    // Save new password
+    user.Password = hashed
+    database.DB.Save(&user)
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "Password set successfully, you can now log in locally with password"})
 }

@@ -48,14 +48,38 @@ func CreateCategory(ctx *gin.Context) {
 func GetAllCategories(ctx *gin.Context) {
 	var categories []models.Category
 
-	if err := database.DB.Preload("Products").Find(&categories).Error; err != nil {
+	if err := database.DB.Find(&categories).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve categories"})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message":    "Categories retrieved successfully",
 		"categories": categories,
+	})
+}
+
+func GetCategories(ctx *gin.Context) {
+	idParam := ctx.Param("id")
+
+	var category models.Category
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"errror": "Invalid category ID format"})
+		return
+	}
+
+	if err := database.DB.First(&category, id).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id": category.ID,
+		"name": category.Name,
+		"slug": category.Slug,
+		"created_at": category.CreatedAt,
+		"updated_at": category.UpdatedAt,
 	})
 }
 
@@ -104,6 +128,7 @@ func UpdateCategories(ctx *gin.Context) {
 
 	if input.Name != "" {
 		updateMap["name"] = input.Name
+		updateMap["slug"] = input.Slug
 	}
 
 	if len(updateMap) == 0 {

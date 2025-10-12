@@ -38,6 +38,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		// Category
 		api.GET("/categories", controllers.GetAllCategories)
+		api.GET("/categories/:id", controllers.GetCategories)
 		api.POST("/categories", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateCategory)
 		api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)

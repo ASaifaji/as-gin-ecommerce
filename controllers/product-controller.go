@@ -67,17 +67,16 @@ func CreateProduct(ctx *gin.Context) {
 func GetAllProducts(ctx *gin.Context) {
 	var products []models.Product
 
-	if err := database.DB.Find(&products).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch products",
-		})
+	if err := database.DB.Preload("Category").Find(&products).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": products,
+		"products": products,
 	})
 }
+
 
 func GetProductDetail(ctx *gin.Context) {
 	idParam := ctx.Param("id")
@@ -91,15 +90,14 @@ func GetProductDetail(ctx *gin.Context) {
 	}
 
 	var product models.Product
-	if err := database.DB.First(&product, productID).Error; err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "Product not found",
-		})
+
+	if err := database.DB.Preload("Category").First(&product, productID).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": product,
+		"data":    product,
 	})
 }
 

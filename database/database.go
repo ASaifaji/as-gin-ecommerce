@@ -52,7 +52,7 @@ func seedAdmin() {
 	cfg := config.AdminConfig
 
 	var user models.User
-	if err := DB.Where("email = ?", cfg.AdminEmail).First(&user).Error; err != nil {
+	if err := DB.Where("admin = ?", true).First(&user).Error; err != nil {
 		// Only create if not exist
 		hashed, _ := utils.HashPassword(cfg.AdminPass) // default password
 		admin := models.User{

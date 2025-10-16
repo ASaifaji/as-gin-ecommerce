@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import AdminNavbar from "@/components/AdminNavbar";
+import ProductManagement from "@/components/ProductManagement";
+import CategoryManagement from "@/components/CategoryManagement";
+import ReviewManagement from "@/components/ReviewManagement";
 import {
   LayoutDashboard,
   Package,
@@ -25,7 +28,7 @@ const AdminPanel = () => {
 
   const handleMenuItemClick = (key) => {
     setActive(key);
-    setMenuOpen(false); // Close menu on mobile after selection
+    setMenuOpen(false);
   };
 
   return (
@@ -122,41 +125,11 @@ const AdminPanel = () => {
               </div>
             )}
 
-            {active === "produk" && (
-              <div>
-                <div className="mb-6 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Daftar Produk</h2>
-                  <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors text-sm font-medium">
-                    + Tambah Produk
-                  </button>
-                </div>
-                <p className="text-[#00000099]">Kelola produk di sini. Fitur edit, hapus, dan tambah produk akan ditampilkan di sini.</p>
-                {/* Tabel produk akan ditambahkan di sini */}
-              </div>
-            )}
+            {active === "produk" && <ProductManagement />}
 
-            {active === "kategori" && (
-              <div>
-                <div className="mb-6 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Daftar Kategori</h2>
-                  <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors text-sm font-medium">
-                    + Tambah Kategori
-                  </button>
-                </div>
-                <p className="text-[#00000099]">Kelola kategori produk di sini. Tambah, edit, atau hapus kategori sesuai kebutuhan.</p>
-                {/* Tabel kategori akan ditambahkan di sini */}
-              </div>
-            )}
+            {active === "kategori" && <CategoryManagement />}
 
-            {active === "review" && (
-              <div>
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold">Review & Ulasan Pengguna</h2>
-                </div>
-                <p className="text-[#00000099]">Kelola review & ulasan pengguna di sini. Lihat, setujui, atau tolak review produk dari pelanggan.</p>
-                {/* Tabel review akan ditambahkan di sini */}
-              </div>
-            )}
+            {active === "review" && <ReviewManagement />}
           </section>
         </main>
       </div>

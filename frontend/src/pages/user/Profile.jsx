@@ -1,40 +1,217 @@
-import React from 'react'
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, MapPin, Phone, Mail, ShoppingBag, Heart, CreditCard, Bell, LogOut, Edit2, Camera } from 'lucide-react';
-
+import { jwtDecode } from 'jwt-decode';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   const [userData, setUserData] = useState({
-    name: 'Rina Kusuma',
-    email: 'rina.kusuma@email.com',
-    phone: '+62 812-3456-7890',
-    address: 'Jl. Pemuda No. 123, Semarang, Jawa Tengah 50132',
-    joinDate: 'Bergabung sejak Januari 2023',
-    avatar: 'https://ui-avatars.com/api/?name=Rina+Kusuma&background=6366f1&color=fff&size=200'
+    id: '',
+    username: '',
+    email: '',
+    phone: '',
+    label: '',
+    street: '',
+    city: '',
+    province: '',
+    postal: '',
+    country: '',
   });
 
-  const orderHistory = [
-    { id: '#ORD-2024-001', date: '15 Sep 2024', total: 'Rp 450.000', status: 'Dikirim', items: 3 },
-    { id: '#ORD-2024-002', date: '08 Sep 2024', total: 'Rp 280.000', status: 'Selesai', items: 2 },
-    { id: '#ORD-2024-003', date: '01 Sep 2024', total: 'Rp 650.000', status: 'Selesai', items: 5 },
-  ];
+  const [editData, setEditData] = useState({...userData});
 
-  const wishlistItems = [
-    { id: 1, name: 'Tas Kulit Premium', price: 'Rp 850.000', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200&h=200&fit=crop' },
-    { id: 2, name: 'Sepatu Sneakers', price: 'Rp 1.200.000', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop' },
-    { id: 3, name: 'Jam Tangan', price: 'Rp 2.500.000', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop' },
-  ];
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  // Fetch profile data
+  useEffect(() => {
+    fetchProfileData();
+    fetchOrderHistory();
+  }, []);
+
+  const getPlaceholder = (value, placeholderText) => {
+    return value && value.trim() !== '' ? '' : placeholderText;
+  };
+
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const decoded = jwtDecode(token);
+      const response = await fetch(`${API_BASE_URL}/profile`,{
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(Response.status);
+      }
+
+      const data = await response.json();
+      const user = data.user;
+
+      const firstAddress = Array.isArray(user.addresses) && user.addresses.length > 0 
+        ? user.addresses[0] 
+        : {};
+
+      const formattedData = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        label: firstAddress.label || '',
+        street: firstAddress.street || '',
+        city: firstAddress.city || '',
+        province: firstAddress.province || '',
+        postal: firstAddress.postal || '',
+        country: firstAddress.country || '',
+        avatar: `https://ui-avatars.com/api/?name=${user.username}&background=6366f1&color=fff&size=200`
+      };
+
+
+      setUserData(formattedData);
+      setEditData(formattedData);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrderHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+
+      const data = await response.json();
+      const orders = Array.isArray(data.orders) ? data.orders : [];
+      
+      const formattedOrders = orders.map(order => ({
+        id: order.order_number || `#ORD-${order.id}`,
+        date: formatDate(order.created_at),
+        total: formatCurrency(order.total_amount),
+        status: order.status || 'Pending',
+        items: order.order_items?.length || 0
+      }));
+
+      setOrderHistory(formattedOrders);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR'
+    }).format(amount);
+  };
+
+  const getStatusColor = (status) => {
+    const statusMap = {
+      'pending': 'bg-yellow-100 text-yellow-700',
+      'shipped': 'bg-blue-100 text-blue-700',
+      'delivered': 'bg-green-100 text-green-700',
+      'cancelled': 'bg-red-100 text-red-700'
+    };
+    return statusMap[status.toLowerCase()] || 'bg-gray-100 text-gray-700';
+  };
 
   const handleInputChange = (field, value) => {
-    setUserData({ ...userData, [field]: value });
+    setEditData({ ...editData, [field]: value });
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      await fetchProfileData(); // ⬅️ refresh data dari server
+      setIsEditing(false);
+      alert('Profile berhasil diperbarui!');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+      console.error('Error updating profile:', err);
+    }
   };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      await fetch(`${API_BASE_URL}/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (err) {
+      console.error('Error logging out:', err);
+    } finally {
+      localStorage.removeItem('token');
+      window.location.href = '/login'; 
+    }
+  };
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f2f0f1] p-4 md:p-8 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f2f0f1] p-4 md:p-8 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f2f0f1] p-4 md:p-8">
@@ -53,22 +230,14 @@ const Profile = () => {
             </div>
             
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{userData.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{userData.username}</h1>
               <p className="text-gray-600 mb-1">{userData.email}</p>
-              <p className="text-sm text-gray-500">{userData.joinDate}</p>
+              <p className="text-sm text-gray-500">Bergabung sejak {userData.createdAt}</p>
               
               <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start">
                 <div className="bg-indigo-50 px-4 py-2 rounded-lg">
                   <p className="text-sm text-gray-600">Total Pesanan</p>
-                  <p className="text-xl font-bold text-indigo-600">24</p>
-                </div>
-                <div className="bg-pink-50 px-4 py-2 rounded-lg">
-                  <p className="text-sm text-gray-600">Wishlist</p>
-                  <p className="text-xl font-bold text-pink-600">12</p>
-                </div>
-                <div className="bg-green-50 px-4 py-2 rounded-lg">
-                  <p className="text-sm text-gray-600">Poin</p>
-                  <p className="text-xl font-bold text-green-600">1,250</p>
+                  <p className="text-xl font-bold text-indigo-600">{orderHistory.length}</p>
                 </div>
               </div>
             </div>
@@ -143,7 +312,10 @@ const Profile = () => {
                 
                 <hr className="my-4" />
                 
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all"
+                >
                   <LogOut size={20} />
                   <span className="font-medium">Keluar</span>
                 </button>
@@ -170,11 +342,11 @@ const Profile = () => {
                   
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                       <input
                         type="text"
-                        value={userData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        value={editData.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
                         disabled={!isEditing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
                       />
@@ -187,7 +359,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="email"
-                        value={userData.email}
+                        value={editData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         disabled={!isEditing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
@@ -201,7 +373,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="tel"
-                        value={userData.phone}
+                        value={editData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         disabled={!isEditing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
@@ -209,17 +381,60 @@ const Profile = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                         <MapPin className="inline mr-2" size={16} />
                         Alamat
                       </label>
-                      <textarea
-                        value={userData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
+
+                      {/* Street */}
+                      <input
+                        type="text"
+                        placeholder={getPlaceholder(editData.street, 'Jalan')}
+                        value={editData.street || ''}
+                        onChange={(e) => handleInputChange('street', e.target.value)}
                         disabled={!isEditing}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
+                        className="w-full mb-3 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
                       />
+
+                      {/* City & Province */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          value={editData.city || ''}
+                          placeholder={getPlaceholder(editData.city, 'Kota')}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          disabled={!isEditing}
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+                        />
+                        <input
+                          type="text"
+                          placeholder={getPlaceholder(editData.province, 'Profinsi')}
+                          value={editData.province}
+                          onChange={(e) => handleInputChange('province', e.target.value)}
+                          disabled={!isEditing}
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+                        />
+                      </div>
+
+                      {/* Postal & Country */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          placeholder={getPlaceholder(editData.postal, 'Kode Pos')}
+                          value={editData.postal}
+                          onChange={(e) => handleInputChange('postal', e.target.value)}
+                          disabled={!isEditing}
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+                        />
+                        <input
+                          type="text"
+                          placeholder={getPlaceholder(editData.country, 'Negara')}
+                          value={editData.country}
+                          onChange={(e) => handleInputChange('country', e.target.value)}
+                          disabled={!isEditing}
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -229,33 +444,33 @@ const Profile = () => {
               {activeTab === 'orders' && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Riwayat Pesanan</h2>
-                  <div className="space-y-4">
-                    {orderHistory.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-semibold text-gray-900">{order.id}</span>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                order.status === 'Dikirim' 
-                                  ? 'bg-blue-100 text-blue-700' 
-                                  : 'bg-green-100 text-green-700'
-                              }`}>
-                                {order.status}
-                              </span>
+                  {orderHistory.length > 0 ? (
+                    <div className="space-y-4">
+                      {orderHistory.map((order) => (
+                        <div key={order.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="font-semibold text-gray-900">{order.id}</span>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                  {order.status}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">{order.date} • {order.items} item</p>
                             </div>
-                            <p className="text-sm text-gray-600">{order.date} • {order.items} item</p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className="text-lg font-bold text-indigo-600">{order.total}</p>
-                            <button className="px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
-                              Detail
-                            </button>
+                            <div className="flex items-center gap-4">
+                              <p className="text-lg font-bold text-indigo-600">{order.total}</p>
+                              <button className="px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                                Detail
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">Belum ada pesanan.</p>
+                  )}
                 </div>
               )}
 
@@ -263,20 +478,24 @@ const Profile = () => {
               {activeTab === 'wishlist' && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Wishlist Saya</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {wishlistItems.map((item) => (
-                      <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                        <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
-                        <div className="p-4">
-                          <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
-                          <p className="text-lg font-bold text-indigo-600 mb-3">{item.price}</p>
-                          <button className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                            Tambah ke Keranjang
-                          </button>
+                  {wishlistItems.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {wishlistItems.map((item) => (
+                        <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                          <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
+                          <div className="p-4">
+                            <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
+                            <p className="text-lg font-bold text-indigo-600 mb-3">{item.price}</p>
+                            <button className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                              Tambah ke Keranjang
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">Wishlist Anda kosong.</p>
+                  )}
                 </div>
               )}
 
@@ -329,4 +548,4 @@ const Profile = () => {
   );
 }
 
-export default Profile
+export default Profile;

@@ -39,7 +39,7 @@ const login = () => {
             document.location.href = "/home";
           }
         } else {
-          toast.error(res.data.message || "login gagal!");
+          toast.error(res.status + res.data.message);
         }
       } catch (err) {
         toast.error(err.response?.data?.message || "login gagal!");

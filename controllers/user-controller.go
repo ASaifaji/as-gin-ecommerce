@@ -12,7 +12,7 @@ import (
 func GetAllUsers(ctx *gin.Context) {
 	var users []models.User
 
-	if err := database.DB.Find(&users).Error; err != nil {
+	if err := database.DB.Preload("Cart").Find(&users).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch users",
 		})
@@ -35,18 +35,13 @@ func GetUserDetail(ctx *gin.Context) {
 		return
 	}
 
-	if err := database.DB.First(&user, id).Error; err != nil {
+	if err := database.DB.Preload("Orders").Preload("Cart").First(&user, id).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
 	// Do not return password in response
-	ctx.JSON(http.StatusOK, gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"admin":    user.Admin,
-	})
+	ctx.JSON(http.StatusOK, user)
 }
 
 func GetProfile(ctx *gin.Context) {

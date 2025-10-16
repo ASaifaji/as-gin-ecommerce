@@ -128,7 +128,7 @@ func UpdatePassword(ctx *gin.Context) {
 
     var user models.User
 	UserId, _ := ctx.Get("id")
-    if err := database.DB.Where("email = ?", UserId).First(&user).Error; err != nil {
+    if err := database.DB.Where("id = ?", UserId).First(&user).Error; err != nil {
         ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found, try to re-login"})
         return
     }

@@ -16,6 +16,7 @@ import HomeAfterLogin from "./pages/user/HomeAfterLogin";
 import Profile from "./pages/user/Profile";
 import AdminPanel from "./pages/admin/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import the component
+import ProductListAfterLogin from "./pages/user/ProductListAfterLogin";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/productsAfterLogin", element: <ProductListAfterLogin /> },
       { path: "/admin", element: <AdminPanel /> },
       { path: "/home", element: <ProtectedRoute><HomeAfterLogin /></ProtectedRoute> },
       { path: "/profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },

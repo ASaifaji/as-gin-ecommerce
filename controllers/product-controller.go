@@ -132,36 +132,46 @@ func UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	var input models.UpdateProductInput // Asumsi struct ini sudah kamu buat di models
+	var input models.UpdateProductInput
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var product models.Product
-	if err := database.DB.First(&product, productID).Error; err != nil{
+	if err := database.DB.First(&product, productID).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
+	// Build update map
 	updateMap := make(map[string]interface{})
-    if input.Name != "" {
-        updateMap["name"] = input.Name
-    }
-    if input.Description != "" {
-        updateMap["description"] = input.Description
-    }
-    if input.Price > 0 { 
-        updateMap["price"] = input.Price
-    }
-    if input.StockQuantity >= 0 {
-        updateMap["stock"] = input.StockQuantity
-    }
-    if input.CategoryID > 0 {
-        updateMap["category_id"] = input.CategoryID
-    }
+	if input.Name != "" {
+		updateMap["name"] = input.Name
+	}
+	if input.Description != "" {
+		updateMap["description"] = input.Description
+	}
+	if input.Price > 0 {
+		updateMap["price"] = input.Price
+	}
+	if input.StockQuantity >= 0 {
+		updateMap["stock_quantity"] = input.StockQuantity
+	}
+	if input.CategoryID > 0 {
+		updateMap["category_id"] = input.CategoryID
+	}
+	// Handle IsActive if it's a pointer or add logic for boolean
+	updateMap["is_active"] = input.IsActive
 
-	database.DB.First(&product, productID)
+	// Perform the update - THIS WAS MISSING!
+	if err := database.DB.Model(&product).Updates(updateMap).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+		return
+	}
+
+	// Reload product with category
+	database.DB.Preload("Category").First(&product, productID)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product updated successfully",

@@ -84,6 +84,21 @@ const categoryService = {
       throw error;
     }
   },
+  
+  // === NEW: total count ===
+  getTotalCount: async () => {
+    try {
+      const res = await api.get("/categories/count");
+      const n = Number(res.data?.total_categories);
+      if (Number.isFinite(n)) return n;
+      const list = await categoryService.getAllCategories();
+      return Array.isArray(list) ? list.length : 0;
+    } catch (e) {
+      console.warn("fallback count categories", e?.message);
+      const list = await categoryService.getAllCategories();
+      return Array.isArray(list) ? list.length : 0;
+    }
+  },
 };
 
 export default categoryService;

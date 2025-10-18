@@ -36,6 +36,21 @@ const productService = {
     });
     return res.data;
   },
+
+  // === NEW: total count ===
+  getTotalCount: async () => {
+    try {
+      const res = await api.get("/products/count");
+      const n = Number(res.data?.total_products);
+      if (Number.isFinite(n)) return n;
+      const list = await productService.getAllProducts();
+      return Array.isArray(list) ? list.length : 0;
+    } catch (e) {
+      console.warn("fallback count products", e?.message);
+      const list = await productService.getAllProducts();
+      return Array.isArray(list) ? list.length : 0;
+    }
+  },
 };
 
 export default productService;

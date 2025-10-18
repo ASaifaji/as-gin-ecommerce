@@ -29,6 +29,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/products", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateProduct)
 		api.PUT("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateProduct)
 		api.DELETE("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProduct)
+		api.GET("/products/count", controllers.CountProducts)
 
 		// Order
 		api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
@@ -45,6 +46,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
 		api.POST("/categories/recount", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.RecountAllCategories)
+		api.GET("/categories/count", controllers.CountCategories)
 
 		// Cart
 		api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
@@ -60,6 +62,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.PUT("/reviews/:id", middlewares.AuthMiddleware(), controllers.UpdateReview)
 		api.DELETE("/reviews/:id", middlewares.AuthMiddleware(), controllers.DeleteReview)
 		api.DELETE("/reviews/:id/admin", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteReviewByAdmin)
+		api.GET("/reviews/count", controllers.CountReviews)
 
 		// google OAuth2
 		api.GET("auth/google/login", controllers.GoogleLogin)

@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { MdArrowBackIos } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../lib/api.js";
+import api from "../../lib/api.js";
+import { jwtDecode } from "jwt-decode";
 
 const initialState = {
   login: "",
@@ -23,13 +24,22 @@ const login = () => {
       toast.error("password is required!");
     } else {
       try {
-        const res = await api.post("login.php", { login, password });
-        if (res.data.status === "success") {
-        toast.success(res.data.message);
-        localStorage.setItem("token", res.data.token);
-        navigate("/");
+        const res = await api.post("login", { login, password });
+        if (res.data.token) {
+          toast.success(res.data.message);
+          const token = res.data.token;
+          localStorage.setItem("token", token);
+
+          const decoded = jwtDecode(token);
+          console.log(decoded);
+          // Cek role admin
+          if (decoded.admin === true) {
+            document.location.href = "/admin";
+          } else {
+            document.location.href = "/home";
+          }
         } else {
-          toast.error(res.data.message || "login gagal!");
+          toast.error(res.status + res.data.message);
         }
       } catch (err) {
         toast.error(err.response?.data?.message || "login gagal!");
@@ -37,12 +47,12 @@ const login = () => {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/");
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   if (token) {
+  //     navigate("/");
+  //   }
+  // }, [navigate]);
 
   const handleChange = (e) => {
     setData({ ...Data, [e.target.name]: e.target.value });

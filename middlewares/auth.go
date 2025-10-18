@@ -19,7 +19,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		} else {
 			cookie, err := ctx.Cookie("auth_token")
 			if err != nil {
-				ctx.Redirect(http.StatusFound, "/login")
+				ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 				ctx.Abort()
 				return 
 			}
@@ -28,7 +28,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		
 		claims, err := utils.ValidateJWT(tokenStr)
 		if err != nil {
-			ctx.Redirect(http.StatusFound, "/login")
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Token Invalid"})
 			ctx.Abort()
 		}
 

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ASaifaji/as-gin-ecommerce/database"
 	"github.com/ASaifaji/as-gin-ecommerce/models"
@@ -13,17 +14,17 @@ func ViewRegister(ctx *gin.Context) {
     ctx.HTML(http.StatusOK, "register.html", gin.H{})
 }
 
-func Register(c *gin.Context) {
+func Register(ctx *gin.Context) {
     var input models.RegisInput
-    if err := c.ShouldBind(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    if err := ctx.ShouldBind(&input); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
     // Hash password
     hashedPassword, err := utils.HashPassword(input.Password)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
         return
     }
 
@@ -34,9 +35,26 @@ func Register(c *gin.Context) {
     }
 
     if err := database.DB.Create(&user).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+    var User models.User
+	if err := database.DB.Where("username = ?", input.Username).First(&User).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+    cart := models.Cart{
+        UserID: User.ID,
+        CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+    }
+
+    if err := database.DB.Create(&cart).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }

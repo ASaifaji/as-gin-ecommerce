@@ -10,7 +10,7 @@ import {
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-export const Navbar = () => {
+export const NavbarAfterJoin = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -19,15 +19,8 @@ export const Navbar = () => {
     <header>
         <div className="bg-black h-[38px] flex justify-center items-center relative gap-3">
             <p className="text-white text-sm max-sm:text-xs text-center">
-            Daftar dan dapatkan diskon 20% untuk pesanan pertama Anda.{" "}
-                <Link to={"/register"} className="underline underline-offset-4">
-                    Sign Up Now
-                </Link>
+            Selamat datang di info.mart!!
             </p>
-
-            <button className="absolute right-5 max-sm:right-2">
-                <X className="text-white" size={20} />
-            </button>
         </div>
 
         <nav className="py-5 md:py-7 px-5 xl:px-20 flex items-center justify-between gap-4">
@@ -106,17 +99,17 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                    <Link to={"/"} className="hover:underline underline-offset-2">About</Link>
+                    <Link className="hover:underline underline-offset-2">About</Link>
                 </li>
 
                 <li>
-                    <Link to={"/products"} className="hover:underline underline-offset-2">
+                    <Link to={"/productsAfterLogin"} className="hover:underline underline-offset-2">
                     Produk
                     </Link>
                 </li>
 
                 <li>
-                    <Link to={"/register"} className="hover:underline underline-offset-2">Sign up</Link>
+                    <Link to={"/login"} className="hover:underline underline-offset-2">Sign up</Link>
                 </li>
 
             </ul>
@@ -132,7 +125,7 @@ export const Navbar = () => {
                 <Search size={20} className="text-gray-500" />
                 <input
                     type="text"
-                    placeholder="Cari produk..."
+                    placeholder="Search for Products..."
                     className="bg-transparent border-none text-base outline-none w-full"
                 />
 
@@ -150,16 +143,16 @@ export const Navbar = () => {
                     <Search size={24} />
                 </button>
 
-                <Link to={"/login"}>
+                <Link to={"/cart"}>
                     <button>
                         <ShoppingCart size={24} />
                     </button>
                 </Link>
 
-                <Link to={"/register"}>
-                  <button>
-                      <CircleUserRound size={24} />
-                  </button>
+                <Link to={"/profile"}>
+                    <button>
+                        <CircleUserRound size={24} />
+                    </button>
                 </Link>
 
             </div>
@@ -225,4 +218,4 @@ export const Navbar = () => {
   );
 };
 
-export default Navbar
+export default NavbarAfterJoin

@@ -14,6 +14,7 @@ func SetupRoutes(r *gin.Engine) {
 		// Users
 		api.POST("/register", func(ctx *gin.Context) { controllers.Register(ctx) })
 		api.POST("/login", func(ctx *gin.Context) { controllers.Login(ctx) })
+		api.POST("/logout", middlewares.Logout)
 		api.GET("/profile", middlewares.AuthMiddleware(), controllers.GetProfile)
 		api.PUT("/profile", middlewares.AuthMiddleware(), controllers.UpdateProfile)
 		api.PUT("/profile/password", middlewares.AuthMiddleware(), controllers.UpdatePassword)
@@ -38,6 +39,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		// Category
 		api.GET("/categories", controllers.GetAllCategories)
+		api.GET("/categories/:id", controllers.GetCategories)
 		api.POST("/categories", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateCategory)
 		api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
@@ -83,6 +85,4 @@ func SetupRoutes(r *gin.Engine) {
 			vLogin.GET("", controllers.ViewLogin)
 		}
 	}
-
-	r.POST("/logout", middlewares.Logout)
 }

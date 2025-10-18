@@ -12,6 +12,16 @@ const categoryService = {
     }
   },
 
+  getCategoriesWithProductCount: async () => {
+    try {
+      const response = await api.get("/categories");
+      return response.data.categories || response.data;
+    } catch (error) {
+      console.error("Error fetching categories with product count:", error);
+      throw error;
+    }
+  },
+
   // Get single category by ID
   getCategoryById: async (id) => {
     try {
@@ -64,6 +74,19 @@ const categoryService = {
       return response.data;
     } catch (error) {
       console.error(`Error deleting category ${id}:`, error);
+      throw error;
+    }
+  },
+  recountAll: async (token) => {
+    try {
+      const res = await api.post(
+        "/categories/recount",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("Error recounting categories:", error);
       throw error;
     }
   },

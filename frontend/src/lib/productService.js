@@ -1,10 +1,10 @@
 import api from "./api";
 
 const productService = {
-  // Get all products with optional filters
-  getAllProducts: async (params = {}) => {
+  // Get all products
+  getAllProducts: async () => {
     try {
-      const response = await api.get("/products", { params });
+      const response = await api.get("/products");
       return response.data;
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -12,21 +12,25 @@ const productService = {
     }
   },
 
-  // Get single product detail
+  // Get single product by ID
   getProductById: async (id) => {
     try {
       const response = await api.get(`/products/${id}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching product:", error);
+      console.error(`Error fetching product ${id}:`, error);
       throw error;
     }
   },
 
-  // Create new product (admin only)
-  createProduct: async (productData) => {
+  // Create product (admin only)
+  createProduct: async (productData, token) => {
     try {
-      const response = await api.post("/products", productData);
+      const response = await api.post("/products", productData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error("Error creating product:", error);
@@ -35,23 +39,31 @@ const productService = {
   },
 
   // Update product (admin only)
-  updateProduct: async (id, productData) => {
+  updateProduct: async (id, productData, token) => {
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      const response = await api.put(`/products/${id}`, productData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error("Error updating product:", error);
+      console.error(`Error updating product ${id}:`, error);
       throw error;
     }
   },
 
   // Delete product (admin only)
-  deleteProduct: async (id) => {
+  deleteProduct: async (id, token) => {
     try {
-      const response = await api.delete(`/products/${id}`);
+      const response = await api.delete(`/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error(`Error deleting product ${id}:`, error);
       throw error;
     }
   },

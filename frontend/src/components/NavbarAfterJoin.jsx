@@ -50,7 +50,7 @@ export const NavbarAfterJoin = () => {
                     className="relative flex items-center gap-1 cursor-pointer"
                     onClick={() => setShowDropdown(!showDropdown)}
                     >
-                    <Link className="hover:underline underline-offset-2">Shop</Link>
+                    <Link className="hover:underline underline-offset-2">Produk</Link>
                     <button>
                         <ChevronDown
                         size={20}
@@ -71,7 +71,7 @@ export const NavbarAfterJoin = () => {
 
                         <li>
                             <Link
-                                to={"/products"}
+                                to={"/productsAfterLogin"}
                                 className="block px-4 py-2 hover:bg-gray-100 hover:underline underline-offset-2"
                              >
                               Fashion
@@ -80,7 +80,7 @@ export const NavbarAfterJoin = () => {
 
                         <li>
                             <Link
-                                to={"/products"}
+                                to={"/productsAfterLogin"}
                                 className="block px-4 py-2 hover:bg-gray-100 hover:underline underline-offset-2"
                               >
                              Kecantikan
@@ -89,7 +89,7 @@ export const NavbarAfterJoin = () => {
 
                         <li>
                             <Link
-                                to={"/products"}
+                                to={"/productsAfterLogin"}
                                 className="block px-4 py-2 hover:bg-gray-100 hover:underline underline-offset-2"
                              >
                               Sport
@@ -104,14 +104,9 @@ export const NavbarAfterJoin = () => {
 
                 <li>
                     <Link to={"/productsAfterLogin"} className="hover:underline underline-offset-2">
-                    Produk
+                    Home
                     </Link>
                 </li>
-
-                <li>
-                    <Link to={"/login"} className="hover:underline underline-offset-2">Sign up</Link>
-                </li>
-
             </ul>
 
             {/* swarch bar */}
@@ -189,8 +184,8 @@ export const NavbarAfterJoin = () => {
 
         <ul className="p-5 flex flex-col gap-4">
           <li>
-            <Link to={"/"} className="block py-2">
-              Shop
+            <Link to={"/productsAfterLogin"} className="block py-2">
+              Produk
             </Link>
           </li>
 
@@ -201,14 +196,8 @@ export const NavbarAfterJoin = () => {
           </li>
 
           <li>
-            <Link to={"/products"} className="block py-2">
-              Produk
-            </Link>
-          </li>
-
-          <li>
             <Link to={"/"} className="block py-2">
-              Brands
+              Home
             </Link>
           </li>
         </ul>

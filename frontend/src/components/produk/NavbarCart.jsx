@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, User, LogOut, Settings, Package, Menu, X, CircleUserRound } from "lucide-react";
 import productService from "@/lib/productService";
 
-const NavbarProduct = () => {
+const NavbarCart = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -182,18 +182,6 @@ const NavbarProduct = () => {
 
           {/* Desktop Actions */}
           <div className="flex items-center gap-6 max-lg:hidden">
-            {/* Cart */}
-            <Link 
-              to="/cart" 
-              className="relative hover:bg-gray-100 p-2 rounded-full transition-colors"
-            >
-              <ShoppingCart size={24} className="text-gray-700" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItemCount > 9 ? "9+" : cartItemCount}
-                </span>
-              )}
-            </Link>
 
             {/* Profile Dropdown */}
             {user ? (
@@ -319,21 +307,6 @@ const NavbarProduct = () => {
           <div className="lg:hidden mt-4 pb-4 border-t pt-4">
             <div className="flex flex-col gap-4">
               {/* Cart Link */}
-              <Link 
-                to="/cart" 
-                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="flex items-center gap-3">
-                  <ShoppingCart size={20} className="text-gray-700" />
-                  <span className="font-medium">Keranjang</span>
-                </div>
-                {cartItemCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemCount > 9 ? "9+" : cartItemCount}
-                  </span>
-                )}
-              </Link>
 
               {user ? (
                 <>
@@ -392,4 +365,4 @@ const NavbarProduct = () => {
   );
 };
 
-export default NavbarProduct;
+export default NavbarCart;

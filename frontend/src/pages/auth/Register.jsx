@@ -42,10 +42,10 @@ const Register = () => {
   return (
     <div className="max-w-[100%] mx-auto">
       <div className="flex items-center justify-between text-purple-500 font-bold m-5 p-1">
-        <Link to={"/login"}>
+        <Link to={"/"}>
           <div className="cursor-pointer flex items-center text-xs">
             <MdArrowBackIos />
-            Back to login
+            Back to Home
           </div>
         </Link>
 

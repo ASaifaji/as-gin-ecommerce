@@ -365,7 +365,7 @@ const ProductListAfterLogin = () => {
                     />
                   </figure>
                   <div className="mt-3 flex flex-col gap-1">
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={`/productDetailAfterLog/${product.id}`}>
                       <h4 className="text-xl font-bold hover:text-gray-600 transition-colors">
                         {product.name}
                       </h4>

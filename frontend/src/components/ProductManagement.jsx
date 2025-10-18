@@ -1,83 +1,150 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Edit2, Trash2, X, Check } from "lucide-react";
+import productService from "@/lib/productService";
+import categoryService from "@/lib/categoryService";
 
 const ProductManagement = () => {
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Kaos Premium",
-      category: "Fashion",
-      price: 150000,
-      stock: 50,
-      image: "https://via.placeholder.com/200x200?text=Kaos+Premium",
-    },
-    {
-      id: 2,
-      name: "Sepatu Olahraga",
-      category: "Sport",
-      price: 450000,
-      stock: 30,
-      image: "https://via.placeholder.com/200x200?text=Sepatu+Olahraga",
-    },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  // Form selaras backend
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
+    description: "",
     price: "",
-    stock: "",
-    image: "",
+    stock_quantity: "",
+    category_id: "",
+    is_active: true,
+    image: "", // opsional (UI-only)
   });
+
+  // Ambil token admin (kalau pakai proteksi JWT)
+  const token = useMemo(() => localStorage.getItem("token") || "", []);
+
+  const loadAll = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [prods, cats] = await Promise.all([
+        productService.getAllProducts(),
+        categoryService.getAllCategories(),
+      ]);
+      setProducts(Array.isArray(prods) ? prods : []);
+      setCategories(Array.isArray(cats) ? cats : []);
+    } catch (e) {
+      console.error(e);
+      setError("Gagal memuat data produk/kategori.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  const resetForm = () =>
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      stock_quantity: "",
+      category_id: "",
+      is_active: true,
+      image: "",
+    });
 
   const handleAddProduct = () => {
     setEditingId(null);
-    setFormData({ name: "", category: "", price: "", stock: "", image: "" });
+    resetForm();
     setShowModal(true);
   };
 
   const handleEditProduct = (product) => {
     setEditingId(product.id);
-    setFormData(product);
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: String(product.price ?? ""),
+      stock_quantity: String(product.stock_quantity ?? ""),
+      category_id: String(product.category_id ?? product.category?.id ?? ""),
+      is_active: Boolean(product.is_active),
+      image: product.image || "",
+    });
     setShowModal(true);
   };
 
-  const handleDeleteProduct = (id) => {
-    setProducts(products.filter((p) => p.id !== id));
+  const handleDeleteProduct = async (id) => {
+    if (!confirm("Hapus produk ini?")) return;
+    try {
+      await productService.deleteProduct(id, token);
+      // Optimistic update + refresh dari server agar count kategori akurat
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      await loadAll();
+    } catch (e) {
+      console.error(e);
+      alert("Gagal menghapus produk.");
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
 
-    if (editingId) {
-      setProducts(
-        products.map((p) =>
-          p.id === editingId
-            ? { ...formData, id: editingId }
-            : p
-        )
-      );
-    } else {
-      setProducts([
-        ...products,
-        {
-          ...formData,
-          id: Date.now(),
-          price: parseInt(formData.price),
-          stock: parseInt(formData.stock),
-        },
-      ]);
+    const toNum = (v, def = 0) =>
+      Number.isFinite(Number(v)) ? Number(v) : def;
+
+    const payload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: toNum(formData.price, 0),
+      stock_quantity: toNum(formData.stock_quantity, 0),
+      category_id: toNum(formData.category_id, 0),
+      is_active: Boolean(formData.is_active),
+    };
+
+    try {
+      if (editingId) {
+        await productService.updateProduct(editingId, payload, token);
+      } else {
+        await productService.createProduct(payload, token);
+      }
+      setShowModal(false);
+      resetForm();
+      await loadAll(); // sinkron UI dengan DB
+    } catch (e) {
+      console.error(e);
+      setError("Gagal menyimpan produk. Periksa input & koneksi.");
+    } finally {
+      setSaving(false);
     }
-
-    setShowModal(false);
-    setFormData({ name: "", category: "", price: "", stock: "", image: "" });
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
+
+  const findCategoryName = (product) => {
+    if (product?.category?.name) return product.category.name;
+    const cid = product.category_id ?? product.category?.id;
+    const found = Array.isArray(categories)
+      ? categories.find((c) => String(c.id) === String(cid))
+      : undefined;
+    return found?.name || "-";
+  };
+
+  if (loading) return <p>Memuat data…</p>;
 
   return (
     <div>
@@ -91,43 +158,56 @@ const ProductManagement = () => {
         </button>
       </div>
 
-      {/* Product Cards Grid */}
+      {error && (
+        <div className="mb-4 rounded bg-red-100 text-red-700 px-3 py-2 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Grid kartu produk */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
           <div
             key={product.id}
             className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden border border-gray-200"
           >
-            {/* Product Image */}
             <div className="relative w-full h-48 bg-[#F0F0F0] overflow-hidden">
               <img
-                src={product.image}
+                src={
+                  product.image ||
+                  "https://via.placeholder.com/600x400?text=Product"
+                }
                 alt={product.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform"
               />
               <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 rounded text-xs font-semibold">
-                {product.category}
+                {findCategoryName(product)}
               </div>
             </div>
 
-            {/* Product Info */}
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                 {product.name}
               </h3>
 
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {product.description || "—"}
+              </p>
+
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-[#F0F0F0] p-2 rounded">
                   <p className="text-xs text-[#00000066]">Harga</p>
                   <p className="font-semibold text-sm">
-                    Rp {product.price.toLocaleString("id-ID")}
+                    Rp {Number(product.price || 0).toLocaleString("id-ID")}
                   </p>
                 </div>
                 <div className="bg-[#F0F0F0] p-2 rounded">
                   <p className="text-xs text-[#00000066]">Stok</p>
                   <p className="font-semibold text-sm">
-                    {product.stock > 0 ? (
-                      <span className="text-green-600">{product.stock}</span>
+                    {Number(product.stock_quantity) > 0 ? (
+                      <span className="text-green-600">
+                        {product.stock_quantity}
+                      </span>
                     ) : (
                       <span className="text-red-600">Habis</span>
                     )}
@@ -135,7 +215,6 @@ const ProductManagement = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEditProduct(product)}
@@ -157,7 +236,7 @@ const ProductManagement = () => {
         ))}
       </div>
 
-      {/* Modal Add/Edit Product */}
+      {/* Modal Tambah/Edit */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -191,19 +270,36 @@ const ProductManagement = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
+                  Deskripsi
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Deskripsi singkat"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
                   Kategori
                 </label>
                 <select
-                  name="category"
-                  value={formData.category}
+                  name="category_id"
+                  value={formData.category_id}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 >
                   <option value="">Pilih Kategori</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Kecantikan">Kecantikan</option>
-                  <option value="Sport">Sport</option>
+                  {Array.isArray(categories) &&
+                    categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -216,7 +312,7 @@ const ProductManagement = () => {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  placeholder="Masukkan harga"
+                  min="0"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 />
@@ -228,18 +324,33 @@ const ProductManagement = () => {
                 </label>
                 <input
                   type="number"
-                  name="stock"
-                  value={formData.stock}
+                  name="stock_quantity"
+                  value={formData.stock_quantity}
                   onChange={handleInputChange}
-                  placeholder="Masukkan jumlah stok"
+                  min="0"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 />
               </div>
 
+              <div className="flex items-center gap-2">
+                <input
+                  id="is_active"
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active}
+                  onChange={handleInputChange}
+                  className="h-4 w-4"
+                />
+                <label htmlFor="is_active" className="text-sm">
+                  Aktif
+                </label>
+              </div>
+
+              {/* Optional preview URL gambar (UI-only) */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  URL Gambar
+                  URL Gambar (opsional)
                 </label>
                 <input
                   type="url"
@@ -248,7 +359,6 @@ const ProductManagement = () => {
                   onChange={handleInputChange}
                   placeholder="https://example.com/image.jpg"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  required
                 />
               </div>
 
@@ -258,7 +368,10 @@ const ProductManagement = () => {
                     src={formData.image}
                     alt="preview"
                     className="w-full h-full object-cover"
-                    onError={(e) => (e.target.src = "https://via.placeholder.com/200x200?text=Invalid")}
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/600x400?text=Invalid+Image";
+                    }}
                   />
                 </div>
               )}
@@ -268,15 +381,21 @@ const ProductManagement = () => {
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="flex-1 bg-[#F0F0F0] hover:bg-[#e5e5e5] px-4 py-2 rounded transition-colors text-sm font-medium"
+                  disabled={saving}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="flex-1 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+                  disabled={saving}
                 >
                   <Check size={18} />
-                  {editingId ? "Simpan Perubahan" : "Tambah Produk"}
+                  {saving
+                    ? "Menyimpan…"
+                    : editingId
+                    ? "Simpan Perubahan"
+                    : "Tambah Produk"}
                 </button>
               </div>
             </form>

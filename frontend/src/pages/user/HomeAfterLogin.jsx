@@ -1,13 +1,13 @@
 import React from "react";
 import HeroSection from "../../components/HeroSection";
 import PartnerSection from "../../components/PartnerSection";
-import Produk from "../../components/Produk";
 import ProdukTerlaris from "../../components/ProdukTerlaris";
 import Kategori from "../../components/Kategori";
 import TestimonialSection from "../../components/TestimonialSection";
 import NewsletterSection from "../../components/NewsletterSection";
 import NavbarAfterJoin from "../../components/NavbarAfterJoin";
 import Footer from "../../components/Footer";
+import ProdukAfterLogin from "@/components/ProdukAfterLogin";
 
 const HomeAfterLogin = () => {
   return (
@@ -15,7 +15,7 @@ const HomeAfterLogin = () => {
       <NavbarAfterJoin />
       <HeroSection />
       <PartnerSection />
-      <Produk />
+      <ProdukAfterLogin />
       <ProdukTerlaris />
       <Kategori />
       <TestimonialSection />

@@ -34,8 +34,12 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
 		api.GET("/orders", middlewares.AuthMiddleware(), controllers.GetAllOwnOrders)
 		api.GET("/orders/:id", middlewares.AuthMiddleware(), controllers.GetOrderDetail)
-		api.GET("/admin/orders", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
+		api.GET("/admin/transactions", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
 		api.PUT("/orders/:id/status", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateOrderStatus)
+
+		// Admin Dashboard
+		api.GET("/admin/dashboard", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetDashboardData)
+		api.GET("/admin/transactions/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteTransaction)
 
 		// Category
 		api.GET("/categories", controllers.GetAllCategories)

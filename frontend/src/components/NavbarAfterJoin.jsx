@@ -103,7 +103,7 @@ export const NavbarAfterJoin = () => {
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">
+                    <Link to={"/productsAfterLogin"} className="hover:underline underline-offset-2">
                     Produk
                     </Link>
                 </li>
@@ -201,7 +201,7 @@ export const NavbarAfterJoin = () => {
           </li>
 
           <li>
-            <Link to={"/"} className="block py-2">
+            <Link to={"/products"} className="block py-2">
               Produk
             </Link>
           </li>

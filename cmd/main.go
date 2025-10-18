@@ -35,7 +35,7 @@ func main () {
 		middlewares.Logger(),
 		cors.New(cors.Config{
 			AllowOrigins:		[]string{"http://localhost:5173"},
-			AllowMethods:		[]string{"GET", "POST", "POST", "DELETE", "OPTIONS"},
+			AllowMethods:		[]string{"GET", "POST", "PUT", "POST", "DELETE", "OPTIONS"},
 			AllowHeaders:		[]string{"Origin", "Content-Type", "Accept", "Authorization"},
 			ExposeHeaders:		[]string{"Content-Length"},
 			AllowCredentials:	true,
@@ -45,4 +45,4 @@ func main () {
 	routes.SetupRoutes(server)
 
 	server.Run()
-}
+}	

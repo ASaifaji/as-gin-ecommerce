@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { SlidersVertical, ChevronRight, ChevronUp, ChevronDown, Check, ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Range } from "react-range";
@@ -14,11 +14,15 @@ import {
 } from "@/components/ui/drawer";
 import productService from "@/lib/productService";
 import categoryService from "@/lib/categoryService";
+import NavbarProduct from "@/components/produk/NavbarProduct";
 
 const itemsPerPage = 9;
 
-const ProductList = () => {
+const ProductListAfterLogin = () => {
   // State for filters
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get("search")?.toLowerCase() || "";
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState([0, 5000000]); // Price in rupiah (cents)
   const [isColorOpen, setIsColorOpen] = useState(false);
@@ -98,18 +102,23 @@ const ProductList = () => {
       if (selectedCategory && product.category_id !== selectedCategory) {
         return false;
       }
-      
-      // Filter by price range (convert from cents to rupiah)
+
+      // Filter by price range
       const priceInRupiah = product.price / 100;
       if (priceInRupiah < values[0] || priceInRupiah > values[1]) {
         return false;
       }
-      
+
+      // ✅ Filter by search keyword
+      if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) {
+        return false;
+      }
+
       // Filter by active status
       if (!product.is_active) {
         return false;
       }
-      
+
       return true;
     })
     .sort((a, b) => {
@@ -271,6 +280,9 @@ const ProductList = () => {
   }
 
   return (
+    <>
+    <NavbarProduct />
+    
     <section className="px-20 py-10 max-lg:px-5">
       <div className="flex items-center gap-2 text-[#00000099] text-base">
         <Link to={`/`}>Home</Link>
@@ -417,7 +429,8 @@ const ProductList = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
-export default ProductList;
+export default ProductListAfterLogin;

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FaTag } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/lib/api";
+import NavbarCart from "@/components/produk/NavbarCart";
 
 const Cart = () => {
   const [cart, setCart] = useState(null);
@@ -179,6 +180,7 @@ const Cart = () => {
 
   return (
     <>
+      <NavbarCart />
       <section className="px-20 py-5 max-md:px-5">
         <div className="flex items-center gap-2 text-[#00000099] text-base">
           <Link to="/">Home</Link>

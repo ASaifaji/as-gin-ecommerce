@@ -12,6 +12,7 @@ type Product struct {
     CategoryID    uint      `json:"category_id"`
     IsActive      bool      `gorm:"default:true" json:"is_active"`
     Category      Category  `json:"category"`
+    Reviews       []Review  `json:"reviews"`
     CreatedAt     time.Time `json:"created_at"`
     UpdatedAt     time.Time `json:"updated_at"`
 }

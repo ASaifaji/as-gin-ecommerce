@@ -15,9 +15,12 @@ import Register from "./pages/auth/Register";
 import HomeAfterLogin from "./pages/user/HomeAfterLogin";
 import Profile from "./pages/user/Profile";
 import AdminPanel from "./pages/admin/AdminPanel";
-import ProtectedRoute from "./components/ProtectedRoute"; // Import the component
+import ProtectedRoute from "./components/ProtectedRoute";
 import ProductListAfterLogin from "./pages/user/ProductListAfterLogin";
 import ProdDetAfterLog from "./pages/user/ProdDetAfterLog";
+import Checkout from "./pages/user/Checkout";
+import Orders from "./pages/user/Orders";
+import OrderDetail from "./pages/user/OrderDetail";
 
 const router = createBrowserRouter([
   {
@@ -34,10 +37,13 @@ const router = createBrowserRouter([
     children: [
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
-      { path: "/cart", element: <Cart /> },
+      { path: "/cart", element: <ProtectedRoute><Cart /></ProtectedRoute> },
+      { path: "/checkout", element: <ProtectedRoute><Checkout /></ProtectedRoute> },
+      { path: "/orders", element: <ProtectedRoute><Orders /></ProtectedRoute> },
+      { path: "/orders/:id", element: <ProtectedRoute><OrderDetail /></ProtectedRoute> },
       { path: "/productDetailAfterLog/:id", element: <ProdDetAfterLog /> },
       { path: "/productsAfterLogin", element: <ProductListAfterLogin /> },
-      { path: "/admin", element: <AdminPanel /> },
+      { path: "/admin", element: <ProtectedRoute><AdminPanel /></ProtectedRoute> },
       { path: "/home", element: <ProtectedRoute><HomeAfterLogin /></ProtectedRoute> },
       { path: "/profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
     ],

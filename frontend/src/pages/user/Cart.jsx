@@ -183,7 +183,7 @@ const Cart = () => {
       <NavbarCart />
       <section className="px-20 py-5 max-md:px-5">
         <div className="flex items-center gap-2 text-[#00000099] text-base">
-          <Link to="/">Home</Link>
+          <Link to="/home">Home</Link>
           <span>/</span>
           <Link to="#" className="text-[#000000]">
             Keranjang

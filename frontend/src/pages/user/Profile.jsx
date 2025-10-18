@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { User, MapPin, Phone, Mail, ShoppingBag, Heart, CreditCard, Bell, LogOut, Edit2, Camera } from 'lucide-react';
+import { User, MapPin, Phone, Mail, ShoppingBag, Bell, LogOut, Edit2, Camera, Package, Truck, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orderHistory, setOrderHistory] = useState([]);
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const [userData, setUserData] = useState({
     id: '',
@@ -37,14 +39,12 @@ const Profile = () => {
     return value && value.trim() !== '' ? '' : placeholderText;
   };
 
-
   const fetchProfileData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      const decoded = jwtDecode(token);
-      const response = await fetch(`${API_BASE_URL}/profile`,{
+      const response = await fetch(`${API_BASE_URL}/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -53,7 +53,7 @@ const Profile = () => {
       });
 
       if (!response.ok) {
-        throw new Error(Response.status);
+        throw new Error('Failed to fetch profile');
       }
 
       const data = await response.json();
@@ -67,7 +67,7 @@ const Profile = () => {
         id: user.id,
         username: user.username,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         label: firstAddress.label || '',
         street: firstAddress.street || '',
         city: firstAddress.city || '',
@@ -76,7 +76,6 @@ const Profile = () => {
         country: firstAddress.country || '',
         avatar: `https://ui-avatars.com/api/?name=${user.username}&background=6366f1&color=fff&size=200`
       };
-
 
       setUserData(formattedData);
       setEditData(formattedData);
@@ -109,40 +108,160 @@ const Profile = () => {
       const orders = Array.isArray(data.orders) ? data.orders : [];
       
       const formattedOrders = orders.map(order => ({
-        id: order.order_number || `#ORD-${order.id}`,
+        id: order.id,
+        orderNumber: `#ORD-${order.id}`,
         date: formatDate(order.created_at),
-        total: formatCurrency(order.total_amount),
-        status: order.status || 'Pending',
-        items: order.order_items?.length || 0
+        total: order.total,
+        status: order.status || 'Menunggu Pembayaran',
+        items: order.items?.length || 0,
+        itemsDetail: order.items || []
       }));
 
       setOrderHistory(formattedOrders);
+      
+      // Generate notifications from orders
+      generateNotifications(formattedOrders);
     } catch (err) {
       console.error('Error fetching orders:', err);
+      setOrderHistory([]);
     }
+  };
+
+  const generateNotifications = (orders) => {
+    const notifs = [];
+    
+    orders.forEach(order => {
+      const baseNotif = {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        date: order.date,
+      };
+
+      switch(order.status) {
+        case 'Menunggu Pembayaran':
+          notifs.push({
+            ...baseNotif,
+            id: `notif-${order.id}-pending`,
+            type: 'order_placed',
+            icon: Clock,
+            iconColor: 'text-yellow-500',
+            bgColor: 'bg-yellow-50',
+            title: 'Pesanan Berhasil Dibuat',
+            message: `Pesanan ${order.orderNumber} berhasil dibuat. Menunggu konfirmasi pembayaran COD.`,
+            time: order.date,
+            read: false
+          });
+          break;
+
+        case 'Diproses':
+          notifs.push({
+            ...baseNotif,
+            id: `notif-${order.id}-processing`,
+            type: 'order_processing',
+            icon: Package,
+            iconColor: 'text-blue-500',
+            bgColor: 'bg-blue-50',
+            title: 'Pesanan Sedang Diproses',
+            message: `Pesanan ${order.orderNumber} sedang diproses dan akan segera dikirim.`,
+            time: order.date,
+            read: false
+          });
+          break;
+
+        case 'Dikirim':
+          notifs.push({
+            ...baseNotif,
+            id: `notif-${order.id}-shipped`,
+            type: 'order_shipped',
+            icon: Truck,
+            iconColor: 'text-purple-500',
+            bgColor: 'bg-purple-50',
+            title: 'Pesanan Dalam Pengiriman',
+            message: `Pesanan ${order.orderNumber} sedang dalam perjalanan ke alamat Anda. Estimasi tiba 2-3 hari.`,
+            time: order.date,
+            read: false
+          });
+          break;
+
+        case 'Selesai':
+          notifs.push({
+            ...baseNotif,
+            id: `notif-${order.id}-delivered`,
+            type: 'order_delivered',
+            icon: CheckCircle,
+            iconColor: 'text-green-500',
+            bgColor: 'bg-green-50',
+            title: 'Pesanan Telah Diterima',
+            message: `Pesanan ${order.orderNumber} telah berhasil diterima. Terima kasih atas kepercayaan Anda!`,
+            time: order.date,
+            read: false
+          });
+          break;
+
+        case 'Dibatalkan':
+          notifs.push({
+            ...baseNotif,
+            id: `notif-${order.id}-cancelled`,
+            type: 'order_cancelled',
+            icon: XCircle,
+            iconColor: 'text-red-500',
+            bgColor: 'bg-red-50',
+            title: 'Pesanan Dibatalkan',
+            message: `Pesanan ${order.orderNumber} telah dibatalkan. Jika ada pertanyaan, hubungi customer service kami.`,
+            time: order.date,
+            read: false
+          });
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    // Sort by date (newest first)
+    setNotifications(notifs.reverse());
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'IDR'
+      currency: 'IDR',
+      minimumFractionDigits: 0
     }).format(amount);
   };
 
   const getStatusColor = (status) => {
     const statusMap = {
-      'pending': 'bg-yellow-100 text-yellow-700',
-      'shipped': 'bg-blue-100 text-blue-700',
-      'delivered': 'bg-green-100 text-green-700',
-      'cancelled': 'bg-red-100 text-red-700'
+      'Menunggu Pembayaran': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+      'Diproses': 'bg-blue-100 text-blue-700 border-blue-300',
+      'Dikirim': 'bg-purple-100 text-purple-700 border-purple-300',
+      'Selesai': 'bg-green-100 text-green-700 border-green-300',
+      'Dibatalkan': 'bg-red-100 text-red-700 border-red-300'
     };
-    return statusMap[status.toLowerCase()] || 'bg-gray-100 text-gray-700';
+    return statusMap[status] || 'bg-gray-100 text-gray-700 border-gray-300';
+  };
+
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'Menunggu Pembayaran':
+        return <Clock className="text-yellow-500" size={20} />;
+      case 'Diproses':
+        return <Package className="text-blue-500" size={20} />;
+      case 'Dikirim':
+        return <Truck className="text-purple-500" size={20} />;
+      case 'Selesai':
+        return <CheckCircle className="text-green-500" size={20} />;
+      case 'Dibatalkan':
+        return <XCircle className="text-red-500" size={20} />;
+      default:
+        return <Package className="text-gray-500" size={20} />;
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -166,7 +285,7 @@ const Profile = () => {
         throw new Error('Failed to update profile');
       }
 
-      await fetchProfileData(); // ⬅️ refresh data dari server
+      await fetchProfileData();
       setIsEditing(false);
       alert('Profile berhasil diperbarui!');
     } catch (err) {
@@ -194,6 +313,19 @@ const Profile = () => {
     }
   };
 
+  const handleViewOrderDetail = (orderId) => {
+    navigate(`/orders/${orderId}`);
+  };
+
+  const markNotificationAsRead = (notifId) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notifId ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (loading) {
     return (
@@ -216,6 +348,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#f2f0f1] p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Profile Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <div className="relative group">
@@ -232,12 +365,23 @@ const Profile = () => {
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{userData.username}</h1>
               <p className="text-gray-600 mb-1">{userData.email}</p>
-              <p className="text-sm text-gray-500">Bergabung sejak {userData.createdAt}</p>
               
               <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start">
                 <div className="bg-indigo-50 px-4 py-2 rounded-lg">
                   <p className="text-sm text-gray-600">Total Pesanan</p>
                   <p className="text-xl font-bold text-indigo-600">{orderHistory.length}</p>
+                </div>
+                <div className="bg-green-50 px-4 py-2 rounded-lg">
+                  <p className="text-sm text-gray-600">Selesai</p>
+                  <p className="text-xl font-bold text-green-600">
+                    {orderHistory.filter(o => o.status === 'Selesai').length}
+                  </p>
+                </div>
+                <div className="bg-yellow-50 px-4 py-2 rounded-lg">
+                  <p className="text-sm text-gray-600">Dalam Proses</p>
+                  <p className="text-xl font-bold text-yellow-600">
+                    {orderHistory.filter(o => ['Menunggu Pembayaran', 'Diproses', 'Dikirim'].includes(o.status)).length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -275,32 +419,8 @@ const Profile = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('wishlist')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    activeTab === 'wishlist' 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Heart size={20} />
-                  <span className="font-medium">Wishlist</span>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('payment')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    activeTab === 'payment' 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <CreditCard size={20} />
-                  <span className="font-medium">Pembayaran</span>
-                </button>
-                
-                <button
                   onClick={() => setActiveTab('notifications')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${
                     activeTab === 'notifications' 
                       ? 'bg-indigo-600 text-white shadow-md' 
                       : 'text-gray-700 hover:bg-gray-100'
@@ -308,6 +428,11 @@ const Profile = () => {
                 >
                   <Bell size={20} />
                   <span className="font-medium">Notifikasi</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute right-3 top-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </button>
                 
                 <hr className="my-4" />
@@ -376,6 +501,7 @@ const Profile = () => {
                         value={editData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         disabled={!isEditing}
+                        placeholder={getPlaceholder(editData.phone, 'Masukkan nomor telepon')}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
                       />
                     </div>
@@ -386,7 +512,6 @@ const Profile = () => {
                         Alamat
                       </label>
 
-                      {/* Street */}
                       <input
                         type="text"
                         placeholder={getPlaceholder(editData.street, 'Jalan')}
@@ -396,7 +521,6 @@ const Profile = () => {
                         className="w-full mb-3 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
                       />
 
-                      {/* City & Province */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <input
                           type="text"
@@ -408,7 +532,7 @@ const Profile = () => {
                         />
                         <input
                           type="text"
-                          placeholder={getPlaceholder(editData.province, 'Profinsi')}
+                          placeholder={getPlaceholder(editData.province, 'Provinsi')}
                           value={editData.province}
                           onChange={(e) => handleInputChange('province', e.target.value)}
                           disabled={!isEditing}
@@ -416,7 +540,6 @@ const Profile = () => {
                         />
                       </div>
 
-                      {/* Postal & Country */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input
                           type="text"
@@ -447,21 +570,55 @@ const Profile = () => {
                   {orderHistory.length > 0 ? (
                     <div className="space-y-4">
                       {orderHistory.map((order) => (
-                        <div key={order.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <span className="font-semibold text-gray-900">{order.id}</span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                  {order.status}
-                                </span>
+                        <div key={order.id} className="border-2 border-gray-200 rounded-xl p-5 hover:shadow-md transition-all">
+                          <div className="flex flex-col gap-4">
+                            {/* Order Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {getStatusIcon(order.status)}
+                                <div>
+                                  <span className="font-bold text-gray-900">{order.orderNumber}</span>
+                                  <p className="text-sm text-gray-600">{order.date}</p>
+                                </div>
                               </div>
-                              <p className="text-sm text-gray-600">{order.date} • {order.items} item</p>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium border-2 ${getStatusColor(order.status)}`}>
+                                {order.status}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <p className="text-lg font-bold text-indigo-600">{order.total}</p>
-                              <button className="px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
-                                Detail
+
+                            {/* Order Items Preview */}
+                            <div className="space-y-2">
+                              {order.itemsDetail.slice(0, 2).map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-3 text-sm">
+                                  <img 
+                                    src={item.product?.image_url || '/product1.png'}
+                                    alt={item.product?.name}
+                                    className="w-12 h-12 object-cover rounded-lg"
+                                  />
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-900">{item.product?.name}</p>
+                                    <p className="text-gray-600">Qty: {item.quantity}</p>
+                                  </div>
+                                  <p className="font-bold">{formatCurrency(item.price * item.quantity)}</p>
+                                </div>
+                              ))}
+                              {order.items > 2 && (
+                                <p className="text-sm text-gray-500 ml-15">+{order.items - 2} produk lainnya</p>
+                              )}
+                            </div>
+
+                            {/* Order Footer */}
+                            <div className="flex items-center justify-between pt-3 border-t">
+                              <div>
+                                <p className="text-sm text-gray-600">Total Pembayaran</p>
+                                <p className="text-xl font-bold text-indigo-600">{formatCurrency(order.total)}</p>
+                              </div>
+                              <button 
+                                onClick={() => handleViewOrderDetail(order.id)}
+                                className="flex items-center gap-2 px-5 py-2 border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium"
+                              >
+                                <Eye size={18} />
+                                Lihat Detail
                               </button>
                             </div>
                           </div>
@@ -469,75 +626,75 @@ const Profile = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-600">Belum ada pesanan.</p>
-                  )}
-                </div>
-              )}
-
-              {/* Wishlist Tab */}
-              {activeTab === 'wishlist' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Wishlist Saya</h2>
-                  {wishlistItems.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {wishlistItems.map((item) => (
-                        <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                          <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
-                          <div className="p-4">
-                            <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
-                            <p className="text-lg font-bold text-indigo-600 mb-3">{item.price}</p>
-                            <button className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                              Tambah ke Keranjang
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="text-center py-10">
+                      <Package size={64} className="mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-600 mb-4">Belum ada pesanan.</p>
+                      <button 
+                        onClick={() => navigate('/productsAfterLogin')}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                      >
+                        Mulai Belanja
+                      </button>
                     </div>
-                  ) : (
-                    <p className="text-gray-600">Wishlist Anda kosong.</p>
                   )}
-                </div>
-              )}
-
-              {/* Payment Tab */}
-              {activeTab === 'payment' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Metode Pembayaran</h2>
-                  <div className="space-y-4">
-                    <div className="border border-gray-200 rounded-xl p-5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg"></div>
-                        <div>
-                          <p className="font-semibold text-gray-900">•••• •••• •••• 4242</p>
-                          <p className="text-sm text-gray-600">Berakhir 12/25</p>
-                        </div>
-                      </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Utama</span>
-                    </div>
-                    
-                    <button className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-indigo-600 hover:text-indigo-600 transition-colors">
-                      + Tambah Metode Pembayaran Baru
-                    </button>
-                  </div>
                 </div>
               )}
 
               {/* Notifications Tab */}
               {activeTab === 'notifications' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Pengaturan Notifikasi</h2>
-                  <div className="space-y-4">
-                    {['Pesanan & Pengiriman', 'Promosi & Penawaran', 'Newsletter', 'Update Produk'].map((item) => (
-                      <div key={item} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                        <span className="font-medium text-gray-900">{item}</span>
-                        <label className="relative inline-block w-12 h-6">
-                          <input type="checkbox" defaultChecked className="sr-only peer" />
-                          <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-indigo-600 transition-colors"></div>
-                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></div>
-                        </label>
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">Notifikasi Pesanan</h2>
+                    {unreadCount > 0 && (
+                      <span className="text-sm text-gray-600">{unreadCount} belum dibaca</span>
+                    )}
                   </div>
+
+                  {notifications.length > 0 ? (
+                    <div className="space-y-3">
+                      {notifications.map((notif) => {
+                        const IconComponent = notif.icon;
+                        return (
+                          <div 
+                            key={notif.id}
+                            onClick={() => {
+                              markNotificationAsRead(notif.id);
+                              handleViewOrderDetail(notif.orderId);
+                            }}
+                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                              notif.read ? 'bg-white border-gray-200' : `${notif.bgColor} border-gray-300`
+                            }`}
+                          >
+                            <div className="flex gap-4">
+                              <div className={`flex-shrink-0 ${notif.iconColor}`}>
+                                <IconComponent size={24} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-1">
+                                  <h3 className="font-bold text-gray-900">{notif.title}</h3>
+                                  {!notif.read && (
+                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-700 mb-2">{notif.message}</p>
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xs text-gray-500">{notif.time}</p>
+                                  <button className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                    Lihat Detail →
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <Bell size={64} className="mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-600">Belum ada notifikasi.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

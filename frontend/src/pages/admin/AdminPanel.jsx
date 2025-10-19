@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import AdminNavbar from "@/components/AdminNavbar";
-import ProductManagement from "@/components/ProductManagement";
-import CategoryManagement from "@/components/CategoryManagement";
-import ReviewManagement from "@/components/ReviewManagement";
+import AdminNavbar from "@/components/admin/AdminNavbar";
+import ProductManagement from "@/components/admin/ProductManagement";
+import CategoryManagement from "@/components/admin/CategoryManagement";
+import ReviewManagement from "@/components/admin/ReviewManagement";
 import {
   LayoutDashboard,
   Package,

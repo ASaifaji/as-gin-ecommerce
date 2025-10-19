@@ -42,6 +42,8 @@ func main () {
 			MaxAge:				12*time.Hour,
 		}),
 	)
+
+	server.Static("/uploads/products", "./uploads/products")
 	routes.SetupRoutes(server)
 
 	server.Run()

@@ -56,6 +56,9 @@ func CreateProduct(ctx *gin.Context) {
 		return
 	}
 
+	// update jumlah produk kategori ini
+	UpdateCategoryProductCount(product.CategoryID)
+
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Product created successfully",
 		"product": gin.H{
@@ -83,7 +86,6 @@ func GetAllProducts(ctx *gin.Context) {
 	})
 }
 
-
 func GetProductDetail(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 
@@ -103,7 +105,7 @@ func GetProductDetail(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data":    product,
+		"data": product,
 	})
 }
 
@@ -118,12 +120,18 @@ func DeleteProduct(ctx *gin.Context) {
 		return
 	}
 
+	// simpan categoryID sebelum delete
+	categoryID := product.CategoryID
+
 	if err := database.DB.Delete(&product).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to delete product",
 		})
 		return
 	}
+
+	// update jumlah produk kategori ini
+	UpdateCategoryProductCount(categoryID)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product deleted successfully",
@@ -166,7 +174,7 @@ func UpdateProduct(ctx *gin.Context) {
 	if input.CategoryID > 0 {
 		updateMap["category_id"] = input.CategoryID
 	}
-	// Handle IsActive if it's a pointer or add logic for boolean
+	// boolean
 	updateMap["is_active"] = input.IsActive
 
 	if err := database.DB.Model(&product).Updates(updateMap).Error; err != nil {
@@ -174,8 +182,19 @@ func UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	// Reload product with category
-	database.DB.Preload("Category").First(&product, productID)
+	// Reload product with category (ambil category_id terbaru)
+	if err := database.DB.Preload("Category").First(&product, productID).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reload product"})
+		return
+	}
+	newCategoryID := product.CategoryID
+
+	if oldCategoryID != newCategoryID {
+		UpdateCategoryProductCount(oldCategoryID)
+		UpdateCategoryProductCount(newCategoryID)
+	} else {
+		UpdateCategoryProductCount(newCategoryID)
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product updated successfully",
@@ -278,4 +297,13 @@ func DeleteProductImage(ctx *gin.Context) {
 	}
 	
 	ctx.JSON(http.StatusOK, gin.H{"message": "Gambar berhasil dihapus"})
+}
+// === NEW: total products ===
+func CountProducts(ctx *gin.Context) {
+	var total int64
+	if err := database.DB.Model(&models.Product{}).Count(&total).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count products"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"total_products": total})
 }

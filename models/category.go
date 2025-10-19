@@ -10,4 +10,5 @@ type Category struct {
     Products  []Product `gorm:"constraint:OnDelete:SET NULL;" json:"products"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
+    ProductCount int64 `gorm:"column:product_count" json:"product_count"`
 }

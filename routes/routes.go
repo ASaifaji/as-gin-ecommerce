@@ -33,6 +33,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/products/:id/images", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UploadProductImages)
 		api.DELETE("/products/images/:image_id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProductImage)
 		api.DELETE("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProduct)
+		api.GET("/products/count", controllers.CountProducts)
 
 		// Order
 		api.POST("/orders", middlewares.AuthMiddleware(), controllers.CreateOrder)
@@ -41,12 +42,15 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/admin/orders", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllOrders)
 		api.PUT("/orders/:id/status", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateOrderStatus)
 
+
 		// Category
 		api.GET("/categories", controllers.GetAllCategories)
 		api.GET("/categories/:id", controllers.GetCategories)
 		api.POST("/categories", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateCategory)
 		api.PUT("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateCategories)
 		api.DELETE("/categories/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteCategory)
+		api.POST("/categories/recount", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.RecountAllCategories)
+		api.GET("/categories/count", controllers.CountCategories)
 
 		// Cart
 		api.GET("/cart", middlewares.AuthMiddleware(), controllers.GetOwnCart)
@@ -62,6 +66,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.PUT("/reviews/:id", middlewares.AuthMiddleware(), controllers.UpdateReview)
 		api.DELETE("/reviews/:id", middlewares.AuthMiddleware(), controllers.DeleteReview)
 		api.DELETE("/reviews/:id/admin", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteReviewByAdmin)
+		api.GET("/reviews/count", controllers.CountReviews)
 
 		// google OAuth2
 		api.GET("auth/google/login", controllers.GoogleLogin)

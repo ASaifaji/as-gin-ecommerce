@@ -29,7 +29,7 @@ func main () {
 
 	server.SetTrustedProxies([]string{"127.0.0.1", "192.168.1.15"})
 
-	server.LoadHTMLGlob("templates/**/*.html")
+	// server.LoadHTMLGlob("templates/**/*.html")
 
 	server.Use(
 		middlewares.Logger(),

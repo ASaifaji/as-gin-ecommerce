@@ -14,6 +14,8 @@ type User struct {
 
 	Addresses []Address `gorm:"constraint:OnDelete:CASCADE;" json:"addresses"`
 
+	AvatarPath string `gorm:"size:255" json:"avatar_path"`
+
 	Orders []Order `json:"orders"`
 	Cart   Cart    `json:"cart"`
 

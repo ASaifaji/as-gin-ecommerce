@@ -17,6 +17,8 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/logout", middlewares.Logout)
 		api.GET("/profile", middlewares.AuthMiddleware(), controllers.GetProfile)
 		api.PUT("/profile", middlewares.AuthMiddleware(), controllers.UpdateProfile)
+		api.POST("/profile/avatar", middlewares.AuthMiddleware(), controllers.UploadAvatar) // update avatar juga lewat sini
+		api.DELETE("/profile/avatar", middlewares.AuthMiddleware(), controllers.DeleteAvatar)
 		api.PUT("/profile/password", middlewares.AuthMiddleware(), controllers.UpdatePassword)
 		api.GET("/users", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.GetAllUsers)
 		api.GET("/users/:id", middlewares.AuthMiddleware(), controllers.GetUserDetail)

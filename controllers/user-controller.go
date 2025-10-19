@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/ASaifaji/as-gin-ecommerce/database"
 	"github.com/ASaifaji/as-gin-ecommerce/models"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func GetAllUsers(ctx *gin.Context) {
@@ -157,19 +161,17 @@ func UpdateProfile(ctx *gin.Context) {
 		user.Phone = input.Phone
 	}
 	if err := database.DB.Save(&user).Error; err != nil {
-    ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
-    return
+    	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+    	return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Profile updated successfully",
 		"user": user,
 	})
-	return
 }
 
 func UpdateUser(ctx *gin.Context) {
-    // 1. Ambil ID user yang akan diubah dari URL
     id := ctx.Param("id")
     userID, err := strconv.ParseUint(id, 10, 64)
     if err != nil {
@@ -177,7 +179,6 @@ func UpdateUser(ctx *gin.Context) {
         return
     }
 
-    // 2. Bind Input (menggunakan model input khusus Admin)
     var input models.UpdateUserAdminInput 
     if err := ctx.ShouldBindJSON(&input); err != nil {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -185,26 +186,102 @@ func UpdateUser(ctx *gin.Context) {
     }
 
     var user models.User
-    // 3. Cari user berdasarkan ID dari URL
     if err := database.DB.First(&user, userID).Error; err != nil {
         ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
         return
     }
-    
-    // 4. Update Field
+
     if input.Username != "" {
         user.Username = input.Username
     }
     if input.Email != "" {
         user.Email = input.Email
     }
-    
-    // Perubahan Hak Akses Admin (Hanya bisa diubah oleh Admin)
-    if input.Admin != nil {
-        user.Admin = *input.Admin 
-    }
 
     database.DB.Save(&user)
 
     ctx.JSON(http.StatusOK, gin.H{"message": "User updated successfully (Admin)", "user": user})
+}
+
+func UploadAvatar(ctx *gin.Context) {
+    userID, err := getIDFromContext(ctx)
+    if err != nil {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    var user models.User
+    if err := database.DB.First(&user, userID).Error; err != nil {
+        ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+
+    file, err := ctx.FormFile("avatar")
+    if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded: " + err.Error()})
+        return
+    }
+
+    oldAvatarPath := user.AvatarPath
+
+    extension := filepath.Ext(file.Filename)
+    uniqueFilename := uuid.New().String() + extension
+    newAvatarPath := filepath.Join("uploads", "avatars", uniqueFilename)
+
+    if err := ctx.SaveUploadedFile(file, newAvatarPath); err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+        return
+    }
+
+    if err := database.DB.Model(&user).Update("avatar_path", newAvatarPath).Error; err != nil {
+        os.Remove(newAvatarPath)
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile avatar"})
+        return
+    }
+
+    if oldAvatarPath != "" {
+        if err := os.Remove(oldAvatarPath); err != nil {
+            log.Printf("Warning: Failed to delete old avatar file %s: %v\n", oldAvatarPath, err)
+        }
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "message":     "Avatar updated successfully",
+        "avatar_path": newAvatarPath,
+    })
+}
+
+
+func DeleteAvatar(ctx *gin.Context) {
+    userID, err := getIDFromContext(ctx)
+    if err != nil {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    var user models.User
+    if err := database.DB.First(&user, userID).Error; err != nil {
+        ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+
+    if user.AvatarPath == "" {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "User does not have an avatar"})
+        return
+    }
+
+    avatarPathToDelete := user.AvatarPath
+
+    // Hapus path dari database (set ke string kosong)
+    if err := database.DB.Model(&user).Update("avatar_path", "").Error; err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove avatar from profile"})
+        return
+    }
+
+    // Hapus file fisik dari storage
+    if err := os.Remove(avatarPathToDelete); err != nil {
+        log.Printf("Warning: Failed to delete avatar file %s: %v\n", avatarPathToDelete, err)
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "Avatar deleted successfully"})
 }

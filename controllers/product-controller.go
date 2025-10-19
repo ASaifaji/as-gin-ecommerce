@@ -199,3 +199,13 @@ func UpdateProduct(ctx *gin.Context) {
 		"product": product,
 	})
 }
+
+// === NEW: total products ===
+func CountProducts(ctx *gin.Context) {
+	var total int64
+	if err := database.DB.Model(&models.Product{}).Count(&total).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count products"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"total_products": total})
+}

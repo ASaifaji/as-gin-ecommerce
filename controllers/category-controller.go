@@ -187,3 +187,13 @@ func RecountAllCategories(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Recount completed"})
 }
+
+// === NEW: total categories ===
+func CountCategories(ctx *gin.Context) {
+	var total int64
+	if err := database.DB.Model(&models.Category{}).Count(&total).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count categories"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"total_categories": total})
+}

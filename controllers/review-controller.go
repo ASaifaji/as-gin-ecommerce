@@ -247,3 +247,12 @@ func DeleteReviewByAdmin(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Review deleted successfully"})
 }
+
+func CountReviews(ctx *gin.Context) {
+	var total int64
+	if err := database.DB.Model(&models.Review{}).Count(&total).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count reviews"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"total_reviews": total})
+}

@@ -11,7 +11,7 @@ type Product struct {
     StockQuantity int       `gorm:"not null;default:0" json:"stock_quantity"`
     CategoryID    uint      `json:"category_id"`
     IsActive      bool      `gorm:"default:true" json:"is_active"`
-    ImagePath     string    `gorm:"size:255" json:"image_path"`
+    Images        []ProductImage `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE;" json:"images"`
     Category      Category  `json:"category"`
     Reviews       []Review  `json:"reviews"`
     CreatedAt     time.Time `json:"created_at"`

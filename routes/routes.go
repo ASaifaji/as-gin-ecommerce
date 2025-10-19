@@ -28,6 +28,8 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/products/:id", controllers.GetProductDetail)
 		api.POST("/products", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.CreateProduct)
 		api.PUT("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UpdateProduct)
+		api.POST("/products/:id/images", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.UploadProductImages)
+		api.DELETE("/products/images/:image_id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProductImage)
 		api.DELETE("/products/:id", middlewares.AuthMiddleware(), middlewares.AuthAdmin(), controllers.DeleteProduct)
 
 		// Order

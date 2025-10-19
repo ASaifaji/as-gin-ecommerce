@@ -40,6 +40,7 @@ func ConnectDB() {
 		&models.OrderItem{},
 		&models.Address{},
 		&models.Review{},
+		&models.ProductImage{},
 	)
 	if err != nil {
         log.Fatal("Migration failed:", err)

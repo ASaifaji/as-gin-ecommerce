@@ -3,8 +3,8 @@ import api from "./api";
 const categoryService = {
   getAllCategories: async () => {
     try {
-      const res = await api.get("/categories");
-      return res.data?.categories || res.data || [];
+      const response = await api.get("/categories");
+      return response.data;
     } catch (error) {
       console.error("Error fetching categories:", error);
       throw error;
@@ -24,10 +24,10 @@ const categoryService = {
   // SINGLE: selalu return object category
   getCategoryById: async (id) => {
     try {
-      const res = await api.get(`/categories/${id}`);
-      return res.data?.category || res.data?.data || res.data;
+      const response = await api.get(`/categories/${id}`);
+      return response.data;
     } catch (error) {
-      console.error(`Error fetching category ${id}:`, error);
+      console.error("Error fetching category:", error);
       throw error;
     }
   },

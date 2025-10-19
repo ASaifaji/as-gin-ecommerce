@@ -201,7 +201,7 @@ const Cart = () => {
                 Keranjang Anda kosong
               </p>
               <Link
-                to="/products"
+                to="/productsAfterLogin"
                 className="inline-block px-8 py-3 bg-black text-white rounded-full hover:bg-neutral-700 transition-all"
               >
                 Mulai Belanja

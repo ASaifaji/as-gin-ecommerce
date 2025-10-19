@@ -11,7 +11,6 @@ const ProdukAfterLogin = () => {
     const fetchProducts = async () => {
       try {
         const res = await productService.getAllProducts();
-        // Ambil hanya 6 produk pertama
         const limitedProducts = (res.products || []).slice(0, 8);
         setProducts(limitedProducts);
       } catch (error) {
@@ -83,7 +82,7 @@ const ProdukAfterLogin = () => {
 
         {products.length > 0 && (
           <button className="py-4 px-[54px] w-[218px] hover:bg-zinc-50 rounded-full border font-medium border-[#0000001A] self-center mt-9">
-            <Link to={`/products`}>View All</Link>
+            <Link to={`/productsAfterLogin`}>View All</Link>
           </button>
         )}
       </div>

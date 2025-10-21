@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Edit2, Trash2, X, Check } from "lucide-react";
 import productService from "@/lib/productService";
 import categoryService from "@/lib/categoryService";
+import api from "@/lib/api";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -13,7 +14,6 @@ const ProductManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Form selaras backend
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -21,11 +21,47 @@ const ProductManagement = () => {
     stock_quantity: "",
     category_id: "",
     is_active: true,
-    image: "", // opsional (UI-only)
+    image: "",
   });
 
-  // Ambil token admin (kalau pakai proteksi JWT)
   const token = useMemo(() => localStorage.getItem("token") || "", []);
+
+  useEffect(() => {
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }, [token]);
+
+  const toNumSafe = (v, def = 0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : def;
+  };
+
+  const pickProducts = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.products)) return res.products;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.items)) return res.items;
+    return [];
+  };
+
+  const pickCategories = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.categories)) return res.categories;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.items)) return res.items;
+    if (Array.isArray(res?.data?.categories)) return res.data.categories;
+    return [];
+  };
+
+  const getErrMsg = (err) => {
+    const d = err?.response?.data;
+    return (
+      d?.message ||
+      d?.error ||
+      (typeof d === "string" ? d : "") ||
+      err?.message ||
+      "Gagal menyimpan produk."
+    );
+  };
 
   const loadAll = async () => {
     setLoading(true);
@@ -35,11 +71,12 @@ const ProductManagement = () => {
         productService.getAllProducts(),
         categoryService.getAllCategories(),
       ]);
-      setProducts(Array.isArray(prods) ? prods : []);
-      setCategories(Array.isArray(cats) ? cats : []);
+      setProducts(pickProducts(prods));
+      setCategories(pickCategories(cats));
     } catch (e) {
-      console.error(e);
       setError("Gagal memuat data produk/kategori.");
+      setProducts([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -67,15 +104,15 @@ const ProductManagement = () => {
   };
 
   const handleEditProduct = (product) => {
-    setEditingId(product.id);
+    setEditingId(product.id ?? product.ID ?? null);
     setFormData({
-      name: product.name || "",
-      description: product.description || "",
-      price: String(product.price ?? ""),
-      stock_quantity: String(product.stock_quantity ?? ""),
-      category_id: String(product.category_id ?? product.category?.id ?? ""),
-      is_active: Boolean(product.is_active),
-      image: product.image || "",
+      name: product.name ?? product.Name ?? "",
+      description: product.description ?? product.Description ?? "",
+      price: String(product.price ?? product.Price ?? ""),
+      stock_quantity: String(product.stock_quantity ?? product.StockQuantity ?? ""),
+      category_id: String(product.category_id ?? product.CategoryID ?? product.category?.id ?? ""),
+      is_active: Boolean(product.is_active ?? product.IsActive ?? true),
+      image: product.image ?? product.Image ?? "",
     });
     setShowModal(true);
   };
@@ -84,11 +121,9 @@ const ProductManagement = () => {
     if (!confirm("Hapus produk ini?")) return;
     try {
       await productService.deleteProduct(id, token);
-      // Optimistic update + refresh dari server agar count kategori akurat
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setProducts((prev) => prev.filter((p) => (p.id ?? p.ID) !== id));
       await loadAll();
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert("Gagal menghapus produk.");
     }
   };
@@ -98,30 +133,62 @@ const ProductManagement = () => {
     setSaving(true);
     setError("");
 
-    const toNum = (v, def = 0) =>
-      Number.isFinite(Number(v)) ? Number(v) : def;
-
-    const payload = {
+    const payloadLower = {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      price: toNum(formData.price, 0),
-      stock_quantity: toNum(formData.stock_quantity, 0),
-      category_id: toNum(formData.category_id, 0),
+      price: toNumSafe(formData.price, 0),
+      stock_quantity: toNumSafe(formData.stock_quantity, 0),
+      category_id: toNumSafe(formData.category_id, 0),
       is_active: Boolean(formData.is_active),
     };
 
+    const steps = [
+      async () => {
+        if (editingId) {
+          await api.put(`/products/${editingId}`, payloadLower);
+        } else {
+          await api.post(`/products`, payloadLower);
+        }
+      },
+      async () => {
+        const body = { product: payloadLower };
+        if (editingId) {
+          await api.put(`/products/${editingId}`, body);
+        } else {
+          await api.post(`/products`, body);
+        }
+      },
+      async () => {
+        const body = { ProductInput: payloadLower };
+        if (editingId) {
+          await api.put(`/products/${editingId}`, body);
+        } else {
+          await api.post(`/products`, body);
+        }
+      },
+    ];
+
     try {
-      if (editingId) {
-        await productService.updateProduct(editingId, payload, token);
-      } else {
-        await productService.createProduct(payload, token);
+      let lastErr = null;
+      for (let i = 0; i < steps.length; i++) {
+        try {
+          await steps[i]();
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+        }
       }
+      if (lastErr) throw lastErr;
+
       setShowModal(false);
       resetForm();
-      await loadAll(); // sinkron UI dengan DB
-    } catch (e) {
-      console.error(e);
-      setError("Gagal menyimpan produk. Periksa input & koneksi.");
+      await loadAll();
+    } catch (e2) {
+      const d = e2?.response?.data;
+      const msg =
+        d?.message || d?.error || (typeof d === "string" ? d : "") || e2?.message || "Gagal menyimpan produk.";
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -137,11 +204,11 @@ const ProductManagement = () => {
 
   const findCategoryName = (product) => {
     if (product?.category?.name) return product.category.name;
-    const cid = product.category_id ?? product.category?.id;
+    const cid = product.category_id ?? product.CategoryID ?? product.category?.id;
     const found = Array.isArray(categories)
-      ? categories.find((c) => String(c.id) === String(cid))
+      ? categories.find((c) => String(c.id ?? c.ID) === String(cid))
       : undefined;
-    return found?.name || "-";
+    return found?.name ?? found?.Name ?? "-";
   };
 
   if (loading) return <p>Memuat data…</p>;
@@ -164,79 +231,82 @@ const ProductManagement = () => {
         </div>
       )}
 
-      {/* Grid kartu produk */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden border border-gray-200"
-          >
-            <div className="relative w-full h-48 bg-[#F0F0F0] overflow-hidden">
-              <img
-                src={
-                  product.image ||
-                  "https://via.placeholder.com/600x400?text=Product"
-                }
-                alt={product.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform"
-              />
-              <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 rounded text-xs font-semibold">
-                {findCategoryName(product)}
-              </div>
-            </div>
-
-            <div className="p-4">
-              <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                {product.name}
-              </h3>
-
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {product.description || "—"}
-              </p>
-
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#F0F0F0] p-2 rounded">
-                  <p className="text-xs text-[#00000066]">Harga</p>
-                  <p className="font-semibold text-sm">
-                    Rp {Number(product.price || 0).toLocaleString("id-ID")}
-                  </p>
-                </div>
-                <div className="bg-[#F0F0F0] p-2 rounded">
-                  <p className="text-xs text-[#00000066]">Stok</p>
-                  <p className="font-semibold text-sm">
-                    {Number(product.stock_quantity) > 0 ? (
-                      <span className="text-green-600">
-                        {product.stock_quantity}
-                      </span>
-                    ) : (
-                      <span className="text-red-600">Habis</span>
-                    )}
-                  </p>
+      {products.length === 0 ? (
+        <div className="text-sm text-gray-500">Belum ada produk.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => (
+            <div
+              key={product.id ?? product.ID}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden border border-gray-200"
+            >
+              <div className="relative w-full h-48 bg-[#F0F0F0] overflow-hidden">
+                <img
+                  src={
+                    product.image ??
+                    product.Image ??
+                    "https://via.placeholder.com/600x400?text=Product"
+                  }
+                  alt={product.name ?? product.Name ?? "Produk"}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform"
+                />
+                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 rounded text-xs font-semibold">
+                  {findCategoryName(product)}
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEditProduct(product)}
-                  className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <Edit2 size={16} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteProduct(product.id)}
-                  className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <Trash2 size={16} />
-                  Hapus
-                </button>
+              <div className="p-4">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                  {product.name ?? product.Name}
+                </h3>
+
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {product.description ?? product.Description ?? "—"}
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-[#F0F0F0] p-2 rounded">
+                    <p className="text-xs text-[#00000066]">Harga</p>
+                    <p className="font-semibold text-sm">
+                      Rp {toNumSafe(product.price ?? product.Price).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                  <div className="bg-[#F0F0F0] p-2 rounded">
+                    <p className="text-xs text-[#00000066]">Stok</p>
+                    <p className="font-semibold text-sm">
+                      {toNumSafe(product.stock_quantity ?? product.StockQuantity) > 0 ? (
+                        <span className="text-green-600">
+                          {toNumSafe(product.stock_quantity ?? product.StockQuantity)}
+                        </span>
+                      ) : (
+                        <span className="text-red-600">Habis</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditProduct(product)}
+                    className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <Edit2 size={16} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProduct(product.id ?? product.ID)}
+                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-2 rounded transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Modal Tambah/Edit */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -254,9 +324,7 @@ const ProductManagement = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Nama Produk
-                </label>
+                <label className="block text-sm font-medium mb-2">Nama Produk</label>
                 <input
                   type="text"
                   name="name"
@@ -269,9 +337,7 @@ const ProductManagement = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Deskripsi
-                </label>
+                <label className="block text-sm font-medium mb-2">Deskripsi</label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -283,9 +349,7 @@ const ProductManagement = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Kategori
-                </label>
+                <label className="block text-sm font-medium mb-2">Kategori</label>
                 <select
                   name="category_id"
                   value={formData.category_id}
@@ -296,17 +360,15 @@ const ProductManagement = () => {
                   <option value="">Pilih Kategori</option>
                   {Array.isArray(categories) &&
                     categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
+                      <option key={c.id ?? c.ID} value={c.id ?? c.ID}>
+                        {c.name ?? c.Name}
                       </option>
                     ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Harga (Rp)
-                </label>
+                <label className="block text-sm font-medium mb-2">Harga (Rp)</label>
                 <input
                   type="number"
                   name="price"
@@ -319,9 +381,7 @@ const ProductManagement = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Stok
-                </label>
+                <label className="block text-sm font-medium mb-2">Stok</label>
                 <input
                   type="number"
                   name="stock_quantity"
@@ -342,16 +402,11 @@ const ProductManagement = () => {
                   onChange={handleInputChange}
                   className="h-4 w-4"
                 />
-                <label htmlFor="is_active" className="text-sm">
-                  Aktif
-                </label>
+                <label htmlFor="is_active" className="text-sm">Aktif</label>
               </div>
 
-              {/* Optional preview URL gambar (UI-only) */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  URL Gambar (opsional)
-                </label>
+                <label className="block text-sm font-medium mb-2">URL Gambar (opsional)</label>
                 <input
                   type="url"
                   name="image"
@@ -391,11 +446,7 @@ const ProductManagement = () => {
                   disabled={saving}
                 >
                   <Check size={18} />
-                  {saving
-                    ? "Menyimpan…"
-                    : editingId
-                    ? "Simpan Perubahan"
-                    : "Tambah Produk"}
+                  {saving ? "Menyimpan…" : editingId ? "Simpan Perubahan" : "Tambah Produk"}
                 </button>
               </div>
             </form>

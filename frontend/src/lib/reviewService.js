@@ -12,7 +12,23 @@ const reviewService = {
     }
   },
 
-  // Get all reviews for a product
+  // Get all reviews from all products (for testimonials section)
+  getAllReviews: async (limit = 12, offset = 0) => {
+    try {
+      const response = await api.get("/reviews", {
+        params: {
+          limit,
+          offset
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching all reviews:", error);
+      throw error;
+    }
+  },
+
+  // Get all reviews for a specific product
   getProductReviews: async (productId) => {
     try {
       const response = await api.get(`/products/${productId}/reviews`);
@@ -83,19 +99,6 @@ const reviewService = {
       return response.data;
     } catch (error) {
       console.error(`Error deleting review ${reviewId} (admin):`, error);
-      throw error;
-    }
-  },
-
-  // Get all reviews (for testimonials)
-  getAllReviews: async () => {
-    try {
-      // This will aggregate reviews from all products
-      // You might need to create a backend endpoint for this
-      // For now, we'll return an empty implementation
-      return [];
-    } catch (error) {
-      console.error("Error fetching all reviews:", error);
       throw error;
     }
   },

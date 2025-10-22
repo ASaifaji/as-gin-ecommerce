@@ -11,6 +11,43 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetAllReviews - Get all reviews from all products (for testimonials)
+func GetAllReviews(ctx *gin.Context) {
+	var reviews []models.Review
+
+	// Get query parameters
+	limitStr := ctx.DefaultQuery("limit", "12")
+	offsetStr := ctx.DefaultQuery("offset", "0")
+
+	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
+
+	// Fetch reviews with user and product info, ordered by rating and date
+	err := database.DB.
+		Preload("User").
+		Preload("Product").
+		Order("rating DESC, created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&reviews).Error
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve reviews"})
+		return
+	}
+
+	// Get total count
+	var total int64
+	database.DB.Model(&models.Review{}).Count(&total)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"reviews": reviews,
+		"total":   total,
+		"limit":   limit,
+		"offset":  offset,
+	})
+}
+
 func CreateReview(ctx *gin.Context) {
 	userID, exists := ctx.Get("id")
 	if !exists {
@@ -47,7 +84,7 @@ func CreateReview(ctx *gin.Context) {
 		return
 	}
 
-	// Business Logic: Check if User Already Reviewed
+	// Check if User Already Reviewed
 	var existingReview models.Review
 	err = database.DB.Where("product_id = ? AND user_id = ?", productID, userIDUint).First(&existingReview).Error
 	
@@ -73,8 +110,7 @@ func CreateReview(ctx *gin.Context) {
 		return
 	}
 
-	// You might want to preload the User data to return the user's name
-	database.DB.Preload("User").First(&review, review.ID)
+	database.DB.Preload("User").Preload("Product").First(&review, review.ID)
 
 	ctx.JSON(http.StatusCreated, review)
 }
@@ -88,7 +124,7 @@ func GetReviewByID(ctx *gin.Context) {
 	}
 
 	var review models.Review
-	err = database.DB.Preload("User").First(&review, reviewID).Error
+	err = database.DB.Preload("User").Preload("Product").First(&review, reviewID).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -163,8 +199,6 @@ func UpdateReview(ctx *gin.Context) {
 		return
 	}
 
-	// Authorization Check
-	// Check if the authenticated user is the one who wrote the review.
 	if review.UserID != userIDUint {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this review"})
 		return
@@ -178,7 +212,7 @@ func UpdateReview(ctx *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("User").First(&review, review.ID)
+	database.DB.Preload("User").Preload("Product").First(&review, review.ID)
 	ctx.JSON(http.StatusOK, review)
 }
 
@@ -207,8 +241,6 @@ func DeleteReview(ctx *gin.Context) {
 		return
 	}
 
-	// Authorization Check
-	// Check if the authenticated user is the one who wrote the review.
 	if review.UserID != userIDUint {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this review"})
 		return

@@ -268,8 +268,33 @@ const Profile = () => {
     setEditData({ ...editData, [field]: value });
   };
 
+  // Fungsi validasi input
+  const validateInputs = () => {
+    if (editData.phone && !/^\d+$/.test(editData.phone)) {
+      alert('Nomor telepon harus menggunakan angka saja!');
+      return false;
+    }
+
+    if (editData.postal && !/^\d+$/.test(editData.postal)) {
+      alert('Kode pos harus menggunakan angka saja!');
+      return false;
+    }
+
+    if (editData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editData.email)) {
+      alert('Email tidak valid. Pastikan mengandung "@" dan domain (contoh: email@example.com)');
+      return false;
+    }
+
+    return true;
+  };
+
+
   const handleSave = async () => {
     try {
+      if (!validateInputs()) {
+        return;
+      }
+
       const token = localStorage.getItem('token');
 
       const response = await fetch(`${API_BASE_URL}/profile`, {
@@ -500,6 +525,7 @@ const Profile = () => {
                         type="tel"
                         value={editData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
+                        onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
                         disabled={!isEditing}
                         placeholder={getPlaceholder(editData.phone, 'Masukkan nomor telepon')}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
@@ -546,6 +572,7 @@ const Profile = () => {
                           placeholder={getPlaceholder(editData.postal, 'Kode Pos')}
                           value={editData.postal}
                           onChange={(e) => handleInputChange('postal', e.target.value)}
+                          onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
                           disabled={!isEditing}
                           className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
                         />

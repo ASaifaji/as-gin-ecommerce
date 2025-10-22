@@ -54,6 +54,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.DELETE("/cart/clear", middlewares.AuthMiddleware(), controllers.ClearCart)
 
 		// Reviews
+		api.GET("/reviews", controllers.GetAllReviews)
 		api.GET("/reviews/:id", controllers.GetReviewByID)
 		api.GET("/products/:id/reviews", controllers.GetReviewForProduct)
 		api.POST("/products/:id/reviews", middlewares.AuthMiddleware(), controllers.CreateReview)

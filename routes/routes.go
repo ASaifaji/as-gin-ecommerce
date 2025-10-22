@@ -11,6 +11,12 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
+		// Check Health
+		api.GET("", func(ctx *gin.Context) { ctx.Status(http.StatusOK) })
+
+		// Check Auth
+		api.GET("/authToken", middlewares.AuthMiddleware())
+
 		// Users
 		api.POST("/register", func(ctx *gin.Context) { controllers.Register(ctx) })
 		api.POST("/login", func(ctx *gin.Context) { controllers.Login(ctx) })

@@ -27,7 +27,7 @@ func Login(ctx *gin.Context) {
 	}
 
 	if !utils.CheckPassword(user.Password, input.Password) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "password"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
 		return
 	}
 

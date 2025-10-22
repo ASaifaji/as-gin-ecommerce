@@ -1,6 +1,15 @@
+ADMIN_USER=root                 # default Username for admin account (if not yet exists)
+ADMIN_EMAIL=admin@example.com   # Email for admin account (if not yet exists)
+ADMIN_PASS=abcd1234             # password for admin account (if not yet exists)
+
+
 APP_PORT=8080       # Default 8080
-DB_USER=root        # MySQL user
+DB_USER=root        # MySQL user (not recommended using root)
 DB_PASS=password    # MySQL user password
 DB_HOST=127.0.0.1   # Localhost / Docker
 DB_PORT=3306        # Default DB Port
 DB_NAME=mydb        # Database
+
+
+GoogleOAuthClientID= 111111111111-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com   # Your Google OAuth Client ID
+GoogleOAuthClientSecret= GOXXXX-XXXXXXXX-XXXXXXXXXXXXXXXXXXX                                    # Your Google OAuth Client Secret

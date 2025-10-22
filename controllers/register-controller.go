@@ -56,5 +56,9 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-    ctx.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+    token, _ := utils.GenerateJWT(User.ID, User.Email, User.Admin)
+
+	ctx.SetCookie("auth_token", token, 3600, "/", "", false, true)
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }

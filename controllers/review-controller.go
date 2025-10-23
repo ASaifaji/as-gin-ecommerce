@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetAllReviews - Get all reviews from all products (for testimonials)
 func GetAllReviews(ctx *gin.Context) {
 	var reviews []models.Review
 
@@ -32,9 +31,10 @@ func GetAllReviews(ctx *gin.Context) {
 		Find(&reviews).Error
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve reviews"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 
 	// Get total count
 	var total int64

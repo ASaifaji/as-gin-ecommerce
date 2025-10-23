@@ -8,8 +8,8 @@ type Review struct {
     Comment   string    `gorm:"type:text" json:"comment"`
     ProductID uint      `gorm:"not null;index" json:"product_id"`
     UserID    uint      `gorm:"not null;index" json:"user_id"`
-    User      User		`json:"user"`
-
+    User    User    `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user"`
+    Product Product `gorm:"foreignKey:ProductID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"product"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
 }

@@ -13,6 +13,7 @@ type Product struct {
     IsActive      bool      `gorm:"default:true" json:"is_active"`
     Category      Category  `json:"category"`
     Reviews       []Review  `json:"reviews"`
+    Image         string    `json:"image"` 
     CreatedAt     time.Time `json:"created_at"`
     UpdatedAt     time.Time `json:"updated_at"`
 }

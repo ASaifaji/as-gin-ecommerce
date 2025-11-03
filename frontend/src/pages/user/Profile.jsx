@@ -268,18 +268,33 @@ const Profile = () => {
     setEditData({ ...editData, [field]: value });
   };
 
-  // Fungsi validasi input
+  // Fungsi validasi input - UPDATED WITH NEW VALIDATION
   const validateInputs = () => {
-    if (editData.phone && !/^\d+$/.test(editData.phone)) {
-      alert('Nomor telepon harus menggunakan angka saja!');
-      return false;
+    // Validasi nomor telepon
+    if (editData.phone) {
+      if (!/^\d+$/.test(editData.phone)) {
+        alert('Nomor telepon harus menggunakan angka saja!');
+        return false;
+      }
+      if (editData.phone.length < 10 || editData.phone.length > 12) {
+        alert('Nomor telepon harus memiliki minimal 10 digit dan maksimal 12 digit!');
+        return false;
+      }
     }
 
-    if (editData.postal && !/^\d+$/.test(editData.postal)) {
-      alert('Kode pos harus menggunakan angka saja!');
-      return false;
+    // Validasi kode pos
+    if (editData.postal) {
+      if (!/^\d+$/.test(editData.postal)) {
+        alert('Kode pos harus menggunakan angka saja!');
+        return false;
+      }
+      if (editData.postal.length !== 5) {
+        alert('Kode pos harus tepat 5 digit!');
+        return false;
+      }
     }
 
+    // Validasi email
     if (editData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editData.email)) {
       alert('Email tidak valid. Pastikan mengandung "@" dan domain (contoh: email@example.com)');
       return false;
@@ -527,9 +542,11 @@ const Profile = () => {
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
                         disabled={!isEditing}
-                        placeholder={getPlaceholder(editData.phone, 'Masukkan nomor telepon')}
+                        placeholder={getPlaceholder(editData.phone, 'Masukkan nomor telepon (10-12 digit)')}
+                        maxLength={12}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Minimal 10 digit, maksimal 12 digit</p>
                     </div>
                     
                     <div>
@@ -567,15 +584,19 @@ const Profile = () => {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          placeholder={getPlaceholder(editData.postal, 'Kode Pos')}
-                          value={editData.postal}
-                          onChange={(e) => handleInputChange('postal', e.target.value)}
-                          onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
-                          disabled={!isEditing}
-                          className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
-                        />
+                        <div>
+                          <input
+                            type="text"
+                            placeholder={getPlaceholder(editData.postal, 'Kode Pos')}
+                            value={editData.postal}
+                            onChange={(e) => handleInputChange('postal', e.target.value)}
+                            onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
+                            disabled={!isEditing}
+                            maxLength={5}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Harus 5 digit</p>
+                        </div>
                         <input
                           type="text"
                           placeholder={getPlaceholder(editData.country, 'Negara')}

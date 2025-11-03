@@ -1,4 +1,4 @@
-import FAQItem from "@/components/FAQItem";
+import FAQItem from "@/components/home/FAQItem";
 import NewsletterSection from "@/components/NewsletterSection";
 import SimiliarProductSection from "@/components/SimiliarProductSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

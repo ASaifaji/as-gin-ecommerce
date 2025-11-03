@@ -1,4 +1,4 @@
-import FAQItem from "@/components/FAQItem";
+import FAQItem from "@/components/home/FAQItem";
 import NewsletterSection from "@/components/NewsletterSection";
 import SimiliarProductSection from "@/components/SimiliarProductSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { FaCircleCheck } from "react-icons/fa6";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import api from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import reviewService from "@/lib/reviewService";
 
 const ProductDetails = () => {
@@ -231,57 +232,44 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Silakan login untuk menambahkan produk ke keranjang");
+      navigate("/login");
+      return;
+    }
+
+    if (!product) return;
+
+    if (product.stock_quantity === 0) {
+      alert("Produk sedang habis stok");
+      return;
+    }
+
+    if (quantity > product.stock_quantity) {
+      alert(`Stok tidak mencukupi. Stok tersedia: ${product.stock_quantity}`);
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      
-      if (!token) {
-        alert("Silakan login terlebih dahulu");
-        navigate("/login");
-        return;
-      }
-
-      if (!product) return;
-
-      if (product.stock_quantity === 0) {
-        alert("Produk sedang habis stok");
-        return;
-      }
-
-      if (quantity > product.stock_quantity) {
-        alert(`Stok tidak mencukupi. Stok tersedia: ${product.stock_quantity}`);
-        return;
-      }
-
       setAddingToCart(true);
-
       await api.post(
         "/cart",
-        {
-          product_id: product.id,
-          quantity: quantity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { product_id: product.id, quantity },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
+
       alert("Produk berhasil ditambahkan ke keranjang!");
-      
       const goToCart = confirm("Lihat keranjang sekarang?");
-      if (goToCart) {
-        navigate("/cart");
-      } else {
-        setQuantity(1);
-      }
+      if (goToCart) navigate("/cart");
     } catch (err) {
       console.error("Error adding to cart:", err);
       if (err.response?.status === 401) {
-        alert("Sesi Anda telah berakhir. Silakan login kembali.");
+        alert("Sesi berakhir. Silakan login kembali.");
         navigate("/login");
       } else {
-        alert(err.response?.data?.error || "Gagal menambahkan produk ke keranjang");
+        alert("Gagal menambahkan produk ke keranjang");
       }
     } finally {
       setAddingToCart(false);
@@ -323,9 +311,9 @@ const ProductDetails = () => {
     <>
       <section className="px-20 py-5 max-md:px-5">
         <div className="flex items-center gap-2 text-[#00000099] text-base">
-          <Link to="/home">Home</Link>
+          <Link to="/">Home</Link>
           <span>/</span>
-          <Link to="/productsAfterLogin">Shop</Link>
+          <Link to="/products">Shop</Link>
           <span>/</span>
           <Link to="#" className="text-[#000000]">{product.name}</Link>
         </div>
@@ -465,12 +453,16 @@ const ProductDetails = () => {
                   <Plus size={16} />
                 </button>
               </div>
-              <button 
+              <button
                 onClick={handleAddToCart}
-                disabled={addingToCart || product.stock_quantity === 0}
-                className="bg-black py-[12px] px-[16px] text-white font-medium text-base rounded-full hover:bg-neutral-700 transition-all max-sm:text-sm ease-in-out duration-200 w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="bg-black py-[12px] px-[16px] text-white font-medium text-base rounded-full hover:bg-neutral-700 transition-all w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={product.stock_quantity === 0 || addingToCart}
               >
-                {addingToCart ? "Menambahkan..." : product.stock_quantity === 0 ? "Stok Habis" : "Masukkan Keranjang"}
+                {addingToCart 
+                  ? "Menambahkan..."
+                  : product.stock_quantity === 0
+                  ? "Stok Habis"
+                  : "Masukkan Keranjang"}
               </button>
             </div>
           </div>

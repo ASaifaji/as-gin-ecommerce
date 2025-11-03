@@ -347,7 +347,7 @@ const ProductList = () => {
                 <div key={product.id}>
                   <figure className="h-[298px] rounded-[20px] overflow-hidden bg-gray-200">
                     <img
-                      src={product.image}
+                      src={product.image || "/product1.png"}
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />

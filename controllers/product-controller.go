@@ -41,6 +41,7 @@ func CreateProduct(ctx *gin.Context) {
 		StockQuantity: input.StockQuantity,
 		CategoryID:    input.CategoryID,
 		IsActive:      input.IsActive,
+		Image:		   input.Image,
 	}
 
 	if err := database.DB.Create(&product).Error; err != nil {

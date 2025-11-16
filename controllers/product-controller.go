@@ -41,6 +41,7 @@ func CreateProduct(ctx *gin.Context) {
 		StockQuantity: input.StockQuantity,
 		CategoryID:    input.CategoryID,
 		IsActive:      input.IsActive,
+		Image:		   input.Image,
 	}
 
 	if err := database.DB.Create(&product).Error; err != nil {
@@ -49,6 +50,9 @@ func CreateProduct(ctx *gin.Context) {
 		})
 		return
 	}
+
+	// update jumlah produk kategori ini
+	UpdateCategoryProductCount(product.CategoryID)
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Product created successfully",
@@ -77,7 +81,6 @@ func GetAllProducts(ctx *gin.Context) {
 	})
 }
 
-
 func GetProductDetail(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 
@@ -97,7 +100,7 @@ func GetProductDetail(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data":    product,
+		"data": product,
 	})
 }
 
@@ -112,12 +115,18 @@ func DeleteProduct(ctx *gin.Context) {
 		return
 	}
 
+	// simpan categoryID sebelum delete
+	categoryID := product.CategoryID
+
 	if err := database.DB.Delete(&product).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to delete product",
 		})
 		return
 	}
+
+	// update jumlah produk kategori ini
+	UpdateCategoryProductCount(categoryID)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product deleted successfully",
@@ -132,36 +141,59 @@ func UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	var input models.UpdateProductInput // Asumsi struct ini sudah kamu buat di models
+	var input models.UpdateProductInput
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var product models.Product
-	if err := database.DB.First(&product, productID).Error; err != nil{
+	if err := database.DB.First(&product, productID).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	updateMap := make(map[string]interface{})
-    if input.Name != "" {
-        updateMap["name"] = input.Name
-    }
-    if input.Description != "" {
-        updateMap["description"] = input.Description
-    }
-    if input.Price > 0 { 
-        updateMap["price"] = input.Price
-    }
-    if input.StockQuantity >= 0 {
-        updateMap["stock"] = input.StockQuantity
-    }
-    if input.CategoryID > 0 {
-        updateMap["category_id"] = input.CategoryID
-    }
+	oldCategoryID := product.CategoryID
 
-	database.DB.First(&product, productID)
+	// Build update map
+	updateMap := make(map[string]interface{})
+	if input.Name != "" {
+		updateMap["name"] = input.Name
+	}
+	if input.Description != "" {
+		updateMap["description"] = input.Description
+	}
+	if input.Price > 0 {
+		updateMap["price"] = input.Price
+	}
+	if input.StockQuantity >= 0 {
+		updateMap["stock_quantity"] = input.StockQuantity
+	}
+	if input.CategoryID > 0 {
+		updateMap["category_id"] = input.CategoryID
+	}
+	// boolean
+	updateMap["is_active"] = input.IsActive
+
+	// Perform the update
+	if err := database.DB.Model(&product).Updates(updateMap).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+		return
+	}
+
+	// Reload product with category (ambil category_id terbaru)
+	if err := database.DB.Preload("Category").First(&product, productID).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reload product"})
+		return
+	}
+	newCategoryID := product.CategoryID
+
+	if oldCategoryID != newCategoryID {
+		UpdateCategoryProductCount(oldCategoryID)
+		UpdateCategoryProductCount(newCategoryID)
+	} else {
+		UpdateCategoryProductCount(newCategoryID)
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Product updated successfully",

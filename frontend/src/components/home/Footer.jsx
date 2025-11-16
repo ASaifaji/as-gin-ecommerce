@@ -160,7 +160,7 @@ const Footer = () => {
       <div className="border-t border-[#0000001A] my-7"></div>
       <div className="flex justify-between items-center max-sm:flex-col gap-5">
         <p className="text-[#00000099] text-sm">
-          Info.mart © 2025-2026, All Rights Reserved
+          Info.mart © 2025-2026
         </p>
         <img src="/paymentmethods.png" alt="payments methods image" />
       </div>

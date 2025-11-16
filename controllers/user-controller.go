@@ -35,7 +35,7 @@ func GetUserDetail(ctx *gin.Context) {
 		return
 	}
 
-	if err := database.DB.Preload("Orders").Preload("Cart").First(&user, id).Error; err != nil {
+	if err := database.DB.Preload("Addresses").Preload("Orders").Preload("Cart").First(&user, id).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -45,7 +45,6 @@ func GetUserDetail(ctx *gin.Context) {
 }
 
 func GetProfile(ctx *gin.Context) {
-	// 1. Ambil ID user dari Context (menggunakan fungsi pembantu yang konsisten)
     userID, err := getIDFromContext(ctx) 
     if err != nil {
         ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -53,13 +52,11 @@ func GetProfile(ctx *gin.Context) {
     }
 
     var user models.User
-    // 2. Cari user di database untuk mendapatkan profile lengkap (termasuk relasi jika ada)
-    if err := database.DB.First(&user, userID).Error; err != nil {
-        ctx.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
-        return
-    }
+    if err := database.DB.Preload("Addresses").Preload("Orders").Preload("Cart").First(&user, userID).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
 
-    // 3. Mengembalikan objek user lengkap
     ctx.JSON(http.StatusOK, gin.H{
         "user": user, 
     })
@@ -126,6 +123,29 @@ func UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
+	var address models.Address
+	if err := database.DB.Where("user_id = ?", userID).First(&address).Error; err != nil {
+		// Jika alamat tidak ditemukan, buat alamat baru jika ada data address di input
+		newAddress := models.Address{
+			UserID:  uint(userID),
+			Street:  input.Street,
+			City:    input.City,
+			Province: input.Province,
+			Postal:  input.Postal,
+			Country: input.Country,
+		}
+		database.DB.Create(&newAddress)
+	} else {
+		// Jika alamat ditemukan, update alamat jika ada data address di input
+		
+		address.Street = input.Street
+		address.City = input.City
+		address.Province = input.Province
+		address.Postal = input.Postal
+		address.Country = input.Country
+		database.DB.Save(&address)
+	}
+
 	// Update field yang diperbolehkan
 	if input.Username != "" {
 		user.Username = input.Username
@@ -133,10 +153,19 @@ func UpdateProfile(ctx *gin.Context) {
 	if input.Email != "" {
 		user.Email = input.Email
 	}
-	
-	database.DB.Save(&user)
+	if input.Phone != "" {
+		user.Phone = input.Phone
+	}
+	if err := database.DB.Save(&user).Error; err != nil {
+    ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+    return
+	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully", "user": user})
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
+		"user": user,
+	})
+	return
 }
 
 func UpdateUser(ctx *gin.Context) {

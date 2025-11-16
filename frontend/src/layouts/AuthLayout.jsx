@@ -1,7 +1,12 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 
-const AuthLayout = ({ element }) => {
-  return <main>{element}</main>; // tanpa nav dan footer
+const AuthLayout = () => {
+  return (
+    <main>
+      <Outlet />
+    </main>
+  );
 };
 
 export default AuthLayout;

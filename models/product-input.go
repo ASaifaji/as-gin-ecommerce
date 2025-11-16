@@ -10,6 +10,7 @@ type ProductInput struct{
 	StockQuantity int     `json:"stock_quantity" binding:"required"`
 	CategoryID    uint    `json:"category_id"`
 	IsActive      bool    `json:"is_active"`
+	Image         string  `json:"image,omitempty"`
 }
 
 type UpdateProductInput struct{
@@ -19,4 +20,5 @@ type UpdateProductInput struct{
 	StockQuantity int     `json:"stock_quantity,omitempty"`
 	CategoryID    uint    `json:"category_id,omitempty"`
 	IsActive      bool    `json:"is_active,omitempty"`
+	Image         string  `json:"image,omitempty"`
 }

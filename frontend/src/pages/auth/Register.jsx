@@ -3,7 +3,7 @@ import { MdArrowBackIos } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../lib/api"; // axios instance
+import api from "../../lib/api"; // axios instance
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -23,7 +23,7 @@ const Register = () => {
       toast.error("Email is required!");
     } else {
       try {
-        const res = await api.post("/register", { username, email, password });
+        const res = await api.post("register", { username, email, password });
 
         console.log("Response dari backend:", res.data);
 
@@ -42,10 +42,10 @@ const Register = () => {
   return (
     <div className="max-w-[100%] mx-auto">
       <div className="flex items-center justify-between text-purple-500 font-bold m-5 p-1">
-        <Link to={"/login"}>
+        <Link to={"/"}>
           <div className="cursor-pointer flex items-center text-xs">
             <MdArrowBackIos />
-            Back to login
+            Back to Home
           </div>
         </Link>
 
@@ -95,7 +95,6 @@ const Register = () => {
             {password ? "" : "Password"}
           </span>
         </label>
-
         <button
           type="submit"
           className="w-[270px] xs:w-[360px] md:w-[450px] bg-purple-500 hover:bg-purple-700 p-2 text-white text-base rounded-full mt-5"

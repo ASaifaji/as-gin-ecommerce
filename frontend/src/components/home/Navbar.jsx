@@ -106,11 +106,11 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">About</Link>
+                    <Link to={"/"} className="hover:underline underline-offset-2">About</Link>
                 </li>
 
                 <li>
-                    <Link className="hover:underline underline-offset-2">
+                    <Link to={"/products"} className="hover:underline underline-offset-2">
                     Produk
                     </Link>
                 </li>
@@ -132,7 +132,7 @@ export const Navbar = () => {
                 <Search size={20} className="text-gray-500" />
                 <input
                     type="text"
-                    placeholder="Search for Products..."
+                    placeholder="Cari produk..."
                     className="bg-transparent border-none text-base outline-none w-full"
                 />
 
@@ -150,15 +150,17 @@ export const Navbar = () => {
                     <Search size={24} />
                 </button>
 
-                <Link to={"/cart"}>
+                <Link to={"/login"}>
                     <button>
                         <ShoppingCart size={24} />
                     </button>
                 </Link>
 
-                <button>
-                    <CircleUserRound size={24} />
-                </button>
+                <Link to={"/register"}>
+                  <button>
+                      <CircleUserRound size={24} />
+                  </button>
+                </Link>
 
             </div>
       </nav>
@@ -206,7 +208,7 @@ export const Navbar = () => {
           </li>
 
           <li>
-            <Link to={"/"} className="block py-2">
+            <Link to={"/products"} className="block py-2">
               Produk
             </Link>
           </li>
